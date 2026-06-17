@@ -186,12 +186,28 @@ app.delete('/state/:key', authMiddleware, async (req, res) => {
 const path = require('path');
 const fs   = require('fs');
 app.get('/', (req, res) => {
-  const htmlPath = path.join(__dirname, 'RW_Dashboard_v2.html');
-  if (fs.existsSync(htmlPath)) {
-    res.sendFile(htmlPath);
-  } else {
-    res.json({ ok: true, message: 'Dashboard API running. Add RW_Dashboard_v2.html to serve dashboard.' });
+  // Try multiple possible filenames
+  const candidates = [
+    'RW_Dashboard_v2.html',
+    'RW Dashboard v2.html',
+    'dashboard.html',
+    'index.html',
+  ];
+  for (const name of candidates) {
+    const htmlPath = path.join(__dirname, name);
+    if (fs.existsSync(htmlPath)) {
+      console.log('Serving dashboard:', name);
+      return res.sendFile(htmlPath);
+    }
   }
+  // List what files ARE in the directory to help diagnose
+  const files = fs.readdirSync(__dirname).filter(f => f.endsWith('.html'));
+  res.json({ 
+    ok: true, 
+    message: 'API running — no dashboard HTML found',
+    htmlFilesFound: files,
+    hint: 'Add RW_Dashboard_v2.html to the repo root'
+  });
 });
 
 // ── HEALTH ────────────────────────────────────────────────────────────────────
