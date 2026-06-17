@@ -1,0 +1,2228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Property Lifecycle Tracker — Ray White Cairns Beaches</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#2c2b30;--surface:#3a3a3e;--surface2:#454548;--surface3:#4f4f51;
+  --border:#3e3e42;--border2:#4f4f51;
+  --accent:#f58f7c;--accent-hover:#d4705e;
+  --accent-soft:rgba(245,143,124,0.15);--accent-softer:rgba(245,143,124,0.09);
+  --text:#d6d6d6;--text-bright:#efefef;--text-muted:#8a8a8e;
+  --pink:#f2c4ce;--pink-soft:rgba(242,196,206,0.15);
+  --red:#e05252;--red-soft:rgba(224,82,82,0.15);
+  --green:#3db87a;--green-soft:rgba(61,184,122,0.15);
+  --amber:#e8a838;--amber-soft:rgba(232,168,56,0.15);
+  --blue:#4a9edd;--blue-soft:rgba(74,158,221,0.15);
+  --radius:10px;--radius-lg:14px;
+  --shadow-md:0 4px 16px rgba(0,0,0,0.35);
+}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:6px;}
+::-webkit-scrollbar-thumb:hover{background:var(--accent);}
+
+.header{background:#1c1b1f;padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);}
+.header-left{display:flex;align-items:center;gap:12px;}
+.header-logo{width:34px;height:34px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:15px;color:#2c2b30;font-weight:700;flex-shrink:0;}
+.header-title{font-size:15px;font-weight:600;color:var(--text-bright);letter-spacing:-0.01em;}
+.header-sub{font-size:12px;color:var(--text-muted);margin-top:1px;}
+.header-right{display:flex;align-items:center;gap:8px;}
+.updated-tag{font-size:11px;color:var(--text-muted);padding:3px 8px;border:1px solid var(--border2);border-radius:20px;}
+
+.nav-tabs{background:#232127;padding:0 28px;display:flex;align-items:center;gap:2px;border-bottom:1px solid var(--border);}
+.nav-tab{padding:12px 20px;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;border:none;background:none;font-family:inherit;display:flex;align-items:center;gap:7px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;white-space:nowrap;}
+.nav-tab:hover{color:var(--text);}
+.nav-tab.active{color:var(--text-bright);border-bottom-color:var(--accent);font-weight:600;}
+.nav-tab .tab-count{background:rgba(255,255,255,0.08);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:600;}
+.nav-tab.active .tab-count{background:var(--accent);color:#2c2b30;}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap;font-family:inherit;}
+.btn-ghost{background:rgba(255,255,255,0.07);color:var(--text);border:1px solid var(--border2);}
+.btn-ghost:hover{background:rgba(255,255,255,0.12);border-color:var(--accent);}
+.btn-ghost.on{background:var(--accent);color:#2c2b30;border-color:var(--accent);}
+.btn-upload{background:var(--accent);color:#2c2b30;font-weight:600;}
+.btn-upload:hover{background:var(--accent-hover);}
+.btn-sm{padding:5px 11px;font-size:12px;border-radius:7px;}
+.btn-outline-sm{background:var(--surface2);color:var(--text);border:1px solid var(--border2);padding:5px 11px;font-size:12px;border-radius:7px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;transition:all 0.15s;}
+.btn-outline-sm:hover{border-color:var(--accent);color:var(--text-bright);}
+.btn-clear{background:transparent;color:var(--text-muted);border:1px solid var(--border);font-size:12px;padding:5px 10px;cursor:pointer;border-radius:7px;font-family:inherit;}
+.btn-clear:hover{color:var(--text);border-color:var(--border2);}
+.btn-danger-sm{background:var(--red-soft);color:var(--red);border:1px solid rgba(224,82,82,0.3);padding:5px 11px;font-size:12px;border-radius:7px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;transition:all 0.15s;}
+.btn-danger-sm:hover{background:rgba(224,82,82,0.25);}
+
+.stats-row{background:#232127;border-bottom:1px solid var(--border);padding:14px 28px;display:grid;gap:10px;}
+.stats-row.listing-stats{grid-template-columns:repeat(6,1fr);}
+.stats-row.auction-stats{grid-template-columns:repeat(5,1fr);}
+.stats-row.forms-stats{grid-template-columns:repeat(4,1fr);}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.stat-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.stat-icon.sal{background:var(--accent-soft);color:var(--accent);}
+.stat-icon.pink{background:var(--pink-soft);color:var(--pink);}
+.stat-icon.amber{background:var(--amber-soft);color:var(--amber);}
+.stat-icon.red{background:var(--red-soft);color:var(--red);}
+.stat-icon.green{background:var(--green-soft);color:var(--green);}
+.stat-icon.blue{background:var(--blue-soft);color:var(--blue);}
+.stat-label{font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;line-height:1;}
+.stat-value{font-size:20px;font-weight:700;color:var(--text-bright);line-height:1.1;margin-top:3px;}
+
+.filter-bar{background:#232127;border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.filter-bar input,.filter-bar select{height:34px;padding:0 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;transition:border 0.15s;}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--accent);}
+.filter-bar input{width:200px;}
+.filter-bar input::placeholder{color:var(--text-muted);}
+.filter-bar select{cursor:pointer;}
+.filter-bar select option{background:var(--surface2);}
+.filter-sep{width:1px;height:20px;background:var(--border);margin:0 2px;}
+.result-count{margin-left:auto;font-size:12px;color:var(--text-muted);font-weight:500;}
+
+.board-wrap{padding:20px 28px;overflow-x:auto;}
+.board{display:flex;gap:14px;align-items:flex-start;min-width:max-content;}
+.col{width:290px;flex-shrink:0;}
+.col-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;margin-bottom:8px;border-radius:var(--radius);font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;}
+.col-head.pre_launch{background:rgba(138,138,142,0.15);color:var(--text-muted);border:1px solid rgba(138,138,142,0.2);}
+.col-head.listing{background:var(--accent-soft);color:var(--accent);border:1px solid rgba(245,143,124,0.25);}
+.col-head.conditional{background:var(--amber-soft);color:var(--amber);border:1px solid rgba(232,168,56,0.25);}
+.col-head.unconditional{background:var(--red-soft);color:var(--red);border:1px solid rgba(224,82,82,0.25);}
+.col-head.auc-onsite{background:var(--accent-soft);color:var(--accent);border:1px solid rgba(245,143,124,0.25);}
+.col-head.auc-event{background:var(--pink-soft);color:var(--pink);border:1px solid rgba(242,196,206,0.25);}
+.col-head.auc-unset{background:rgba(138,138,142,0.12);color:var(--text-muted);border:1px solid rgba(138,138,142,0.18);}
+.col-head.form-f6{background:var(--green-soft);color:var(--green);border:1px solid rgba(61,184,122,0.25);}
+.col-head.form-contract{background:var(--blue-soft);color:var(--blue);border:1px solid rgba(74,158,221,0.25);}
+.col-badge{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(255,255,255,0.12);}
+.col-cards{display:flex;flex-direction:column;gap:8px;}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;cursor:pointer;transition:transform 0.12s,box-shadow 0.12s,border-color 0.12s;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;}
+.card.pre_launch::before{background:var(--text-muted);}
+.card.listing::before{background:var(--accent);}
+.card.conditional::before{background:var(--amber);}
+.card.unconditional::before{background:var(--red);}
+.card.settle-soon{border-color:var(--amber);}
+.card.settle-overdue{border-color:var(--red);}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--accent);}
+.card-addr{font-size:13px;font-weight:600;color:var(--text-bright);line-height:1.35;margin-bottom:6px;}
+.card-agents{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;}
+.agent-pill{font-size:11px;font-weight:500;color:var(--accent);background:var(--accent-softer);border:1px solid rgba(245,143,124,0.2);padding:2px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;}
+.card-row{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-muted);margin-bottom:3px;}
+.card-price{font-size:13px;font-weight:600;color:var(--pink);margin:5px 0;}
+.card-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;}
+.tag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;}
+.tag-method{background:var(--surface3);color:var(--text);}
+.tag-type{background:var(--accent-softer);color:var(--accent);}
+.settle-banner{margin-top:8px;padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;}
+.settle-banner.soon{background:var(--amber-soft);color:var(--amber);}
+.settle-banner.overdue{background:var(--red-soft);color:var(--red);}
+.settle-banner.upcoming{background:var(--green-soft);color:var(--green);}
+.settle-banner.today-cls{background:var(--accent-soft);color:var(--accent);}
+
+/* ── PRE-LAUNCH MANUAL ENTRY ── */
+.pre-add-row{background:#232127;border-bottom:1px solid var(--border);padding:10px 28px;}
+.pre-add-row input{height:32px;padding:0 10px;border:1px solid var(--border2);border-radius:7px;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;}
+.pre-add-row input::placeholder{color:var(--text-muted);}
+.pre-add-row input:focus{border-color:var(--accent);}
+
+/* ── AUCTION CARD ── */
+.auc-order-badge input:focus{border-color:var(--text-bright)!important;background:var(--surface2)!important;}
+.auc-order-badge input::-webkit-inner-spin-button{-webkit-appearance:none;}
+.auc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:transform 0.12s,box-shadow 0.12s,border-color 0.12s;}
+.auc-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--accent);}
+.auc-card-head{padding:12px 14px 10px;border-bottom:1px solid var(--border);}
+.auc-card-addr{font-size:13px;font-weight:600;color:var(--text-bright);line-height:1.3;margin-bottom:5px;}
+.auc-card-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;}
+.auc-datetime{font-size:12px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:5px;margin-top:3px;}
+.auc-venue{font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;margin-top:2px;}
+.auc-card-body{padding:10px 14px;}
+.checklist-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.cl-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);padding:3px 0;}
+.cl-item input[type=checkbox]{width:13px;height:13px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
+.cl-item.checked{color:var(--green);}
+.cl-item.checked label{color:var(--green);}
+.cl-item label{cursor:pointer;line-height:1.2;}
+.auc-card-foot{padding:8px 14px;background:#232127;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.progress-bar-wrap{flex:1;height:5px;background:var(--border2);border-radius:5px;margin:0 10px;}
+.progress-bar-fill{height:100%;border-radius:5px;background:var(--accent);transition:width 0.3s;}
+.progress-label{font-size:11px;font-weight:600;color:var(--text-muted);white-space:nowrap;}
+.auc-status-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:0.05em;}
+.badge-onsite{background:var(--accent-soft);color:var(--accent);}
+.badge-event{background:var(--pink-soft);color:var(--pink);}
+.badge-unset{background:rgba(138,138,142,0.15);color:var(--text-muted);}
+
+/* ── AUCTION TYPE TOGGLE ── */
+.auc-type-toggle{display:flex;gap:4px;margin-top:6px;}
+.type-btn{font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--text-muted);cursor:pointer;font-family:inherit;transition:all 0.12s;}
+.type-btn.active-onsite{background:var(--accent-soft);color:var(--accent);border-color:rgba(245,143,124,0.4);}
+.type-btn.active-event{background:var(--pink-soft);color:var(--pink);border-color:rgba(242,196,206,0.4);}
+
+/* ── VENUE EDIT ── */
+.venue-input{width:100%;margin-top:5px;padding:4px 8px;font-size:11px;border:1px solid var(--border2);border-radius:6px;background:var(--surface2);color:var(--text);font-family:inherit;outline:none;}
+.venue-input:focus{border-color:var(--accent);}
+.venue-input::placeholder{color:var(--text-muted);}
+
+/* ── FORM CARD ── */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.form-card-head{padding:12px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.form-card-addr{font-size:13px;font-weight:600;color:var(--text-bright);line-height:1.3;}
+.form-card-agent{font-size:11px;color:var(--text-muted);margin-top:3px;display:flex;align-items:center;gap:4px;}
+.form-type-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;flex-shrink:0;}
+.badge-f6{background:var(--green-soft);color:var(--green);}
+.badge-contract{background:var(--blue-soft);color:var(--blue);}
+.form-card-body{padding:10px 14px;}
+.form-checklist{display:flex;flex-direction:column;gap:4px;}
+.form-cl-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-muted);padding:3px 0;}
+.form-cl-item input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
+.form-cl-item label{cursor:pointer;}
+.form-cl-item.checked label{color:var(--green);}
+.form-card-foot{padding:8px 14px;background:#232127;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+
+.empty-col{text-align:center;padding:28px 12px;color:var(--text-muted);font-size:12px;background:var(--surface2);border:1px dashed var(--border2);border-radius:var(--radius-lg);}
+.empty-col i{font-size:20px;margin-bottom:6px;display:block;opacity:0.3;}
+.empty-state{text-align:center;padding:80px 40px;}
+.empty-icon{width:72px;height:72px;background:var(--surface2);border:2px dashed var(--border2);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--text-muted);margin:0 auto 18px;}
+.empty-state h2{font-size:17px;font-weight:700;color:var(--text-bright);margin-bottom:8px;}
+.empty-state p{font-size:13px;color:var(--text-muted);max-width:300px;margin:0 auto 22px;}
+.btn-upload-lg{background:var(--accent);color:#2c2b30;display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:background 0.15s;}
+.btn-upload-lg:hover{background:var(--accent-hover);}
+
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:200;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:660px;max-height:88vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,0.5);}
+.modal-head{position:sticky;top:0;background:var(--surface);padding:18px 24px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;z-index:5;border-radius:16px 16px 0 0;}
+.modal-head h2{font-size:15px;font-weight:700;color:var(--text-bright);line-height:1.3;}
+.modal-head p{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.modal-close{background:var(--surface2);border:none;width:30px;height:30px;border-radius:8px;cursor:pointer;color:var(--text-muted);font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.modal-close:hover{background:var(--surface3);color:var(--text);}
+.modal-body{padding:20px 24px 24px;}
+.modal-section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);margin:16px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.detail-cell{background:var(--surface2);border-radius:9px;padding:10px 12px;}
+.detail-cell .d-label{font-size:11px;color:var(--text-muted);font-weight:500;margin-bottom:2px;}
+.detail-cell .d-val{font-size:13px;font-weight:600;color:var(--text-bright);}
+.urgency-box{border-radius:10px;padding:12px 16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;margin-top:6px;}
+.urgency-box.overdue{background:var(--red-soft);color:var(--red);border:1px solid rgba(224,82,82,0.3);}
+.urgency-box.today-u{background:var(--accent-soft);color:var(--accent);border:1px solid rgba(245,143,124,0.3);}
+.urgency-box.soon-u{background:var(--amber-soft);color:var(--amber);border:1px solid rgba(232,168,56,0.3);}
+.urgency-box.ok-u{background:var(--green-soft);color:var(--green);border:1px solid rgba(61,184,122,0.3);}
+
+.toast{position:fixed;bottom:24px;right:24px;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:500;color:#fff;z-index:9999;max-width:340px;transform:translateY(70px);opacity:0;transition:transform 0.25s,opacity 0.25s;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.success{background:#1a5c38;}
+.toast.error{background:#7a1a1a;}
+.toast.info{background:#2c2b30;border:1px solid var(--border2);}
+.board-section{display:none;}
+.board-section.active{display:block;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+
+/* ── AUCTION EVENT CATEGORIES ── */
+.auc-event-group{margin-bottom:16px;}
+.auc-event-group-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px;border-radius:8px;cursor:pointer;
+  background:var(--pink-soft);border:1px solid rgba(242,196,206,0.3);
+  font-size:12px;font-weight:600;color:var(--pink);
+  user-select:none;transition:background 0.15s;
+}
+.auc-event-group-head:hover{background:rgba(242,196,206,0.25);}
+.auc-event-group-head.collapsed{background:var(--surface2);color:var(--text-muted);border-color:var(--border);}
+.auc-event-group-body{margin-top:6px;display:flex;flex-direction:column;gap:8px;}
+.auc-event-group-body.hidden{display:none;}
+.auc-group-chevron{transition:transform 0.2s;font-size:11px;}
+.auc-group-chevron.rotated{transform:rotate(-90deg);}
+.auc-event-group-head .group-meta{font-size:10px;opacity:0.7;font-weight:400;margin-left:6px;}
+
+/* ── ONSITE COLLAPSIBLE ── */
+.col-collapse-btn{
+  background:none;border:none;cursor:pointer;
+  color:inherit;font-size:11px;padding:0 4px;opacity:0.7;
+  transition:opacity 0.15s;
+}
+.col-collapse-btn:hover{opacity:1;}
+
+/* ── EVENT CATEGORY MANAGER ── */
+.event-cat-panel{
+  background:#232127;border-bottom:1px solid var(--border);
+  padding:14px 28px;display:none;
+}
+.event-cat-panel.open{display:block;}
+.event-cat-panel h4{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;}
+.cat-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.cat-item{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:8px 12px;font-size:13px;
+}
+.cat-item-name{flex:1;font-weight:500;color:var(--text-bright);}
+.cat-item-date{font-size:12px;color:var(--accent);font-weight:600;}
+.cat-item-count{font-size:11px;color:var(--text-muted);background:var(--surface2);padding:2px 7px;border-radius:20px;}
+.cat-del-btn{background:var(--red-soft);color:var(--red);border:none;border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit;}
+.cat-del-btn:hover{background:rgba(224,82,82,0.25);}
+.cat-add-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.cat-add-row input{height:32px;padding:0 10px;border:1px solid var(--border2);border-radius:7px;font-size:12px;font-family:inherit;color:var(--text);background:var(--surface2);outline:none;}
+.cat-add-row input:focus{border-color:var(--accent);}
+.cat-add-row input::placeholder{color:var(--text-muted);}
+.venue-config-panel{background:#232127;border-bottom:1px solid var(--border);padding:12px 28px;display:none;align-items:flex-start;gap:20px;flex-wrap:wrap;}
+.venue-config-panel.open{display:flex;}
+.venue-config-section{flex:1;min-width:220px;}
+.venue-config-section h4{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;}
+.keyword-list{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;}
+.keyword-chip{font-size:11px;font-weight:500;padding:3px 8px;border-radius:5px;display:inline-flex;align-items:center;gap:5px;}
+.kw-onsite{background:var(--accent-softer);color:var(--accent);border:1px solid rgba(245,143,124,0.2);}
+.kw-event{background:var(--pink-soft);color:var(--pink);border:1px solid rgba(242,196,206,0.2);}
+.kw-del{background:none;border:none;cursor:pointer;color:inherit;opacity:0.6;font-size:10px;padding:0;}
+.kw-del:hover{opacity:1;}
+.kw-add-row{display:flex;gap:5px;margin-top:4px;}
+.kw-add-row input{height:28px;padding:0 8px;font-size:12px;border:1px solid var(--border2);border-radius:6px;font-family:inherit;color:var(--text);background:var(--surface2);outline:none;width:140px;}
+.kw-add-row input:focus{border-color:var(--accent);}
+.kw-add-row input::placeholder{color:var(--text-muted);}
+.kw-add-btn{height:28px;padding:0 10px;font-size:11px;border-radius:6px;border:none;cursor:pointer;font-family:inherit;font-weight:600;}
+.kw-add-btn.onsite{background:var(--accent-soft);color:var(--accent);}
+.kw-add-btn.event{background:var(--pink-soft);color:var(--pink);}
+/* ── SETTLEMENTS ── */
+.set-table-wrap{padding:20px 28px;overflow-x:auto;}
+.set-table{width:100%;border-collapse:collapse;font-size:13px;}
+.set-table th{background:#232127;color:var(--text-muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
+.set-table td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:top;}
+.set-table tr{background:var(--surface);transition:background 0.1s;}
+.set-table tr:hover{background:var(--surface2);}
+.set-table tr.row-overdue td:first-child{border-left:3px solid var(--red);}
+.set-table tr.row-today td:first-child{border-left:3px solid var(--amber);}
+.set-table tr.row-soon td:first-child{border-left:3px solid var(--accent);}
+.set-table tr.row-ok td:first-child{border-left:3px solid var(--green);}
+.set-addr{font-weight:600;color:var(--text-bright);font-size:13px;line-height:1.3;}
+.set-pid{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.set-agent{font-size:11px;color:var(--text-muted);margin-top:2px;display:flex;align-items:center;gap:3px;}
+.set-date{font-size:13px;font-weight:600;color:var(--text);}
+.set-days{font-size:15px;font-weight:700;}
+.set-days.overdue{color:var(--red);}
+.set-days.today{color:var(--amber);}
+.set-days.soon{color:var(--accent);}
+.set-days.ok{color:var(--green);}
+.urgency-pill{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:0.05em;display:inline-block;}
+.u-overdue{background:var(--red-soft);color:var(--red);border:1px solid rgba(224,82,82,0.3);animation:pulseRow 2s infinite;}
+.u-today{background:var(--amber-soft);color:var(--amber);border:1px solid rgba(232,168,56,0.3);}
+.u-soon{background:var(--accent-soft);color:var(--accent);border:1px solid rgba(245,143,124,0.3);}
+.u-ok{background:var(--green-soft);color:var(--green);border:1px solid rgba(61,184,122,0.3);}
+@keyframes pulseRow{0%,100%{opacity:1;}50%{opacity:0.65;}}
+.doc-chips{display:flex;flex-wrap:wrap;gap:4px;max-width:320px;}
+.doc-chip{font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;white-space:nowrap;}
+.doc-ok{background:var(--green-soft);color:var(--green);}
+.doc-missing{background:var(--red-soft);color:var(--red);}
+.set-link{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;text-decoration:none;transition:all 0.12s;border:1px solid;margin-right:4px;margin-bottom:3px;}
+.set-link.vault{background:var(--accent-softer);color:var(--accent);border-color:rgba(245,143,124,0.25);}
+.set-link.vault:hover{background:var(--accent-soft);}
+.set-link.drive{background:var(--green-soft);color:var(--green);border-color:rgba(61,184,122,0.25);}
+.set-link.drive:hover{background:rgba(61,184,122,0.25);}
+.set-price{font-size:12px;font-weight:600;color:var(--pink);}
+.set-filter-bar{background:#232127;border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.set-filter-bar input,.set-filter-bar select{height:34px;padding:0 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;transition:border 0.15s;}
+.set-filter-bar input:focus,.set-filter-bar select:focus{border-color:var(--accent);}
+.set-filter-bar input{width:200px;}
+.set-filter-bar input::placeholder{color:var(--text-muted);}
+.set-filter-bar select{cursor:pointer;}
+.set-filter-bar select option{background:var(--surface2);}
+.set-alert{margin:14px 28px 0;padding:12px 16px;border-radius:10px;background:var(--red-soft);border:1px solid rgba(224,82,82,0.3);color:var(--red);font-size:13px;font-weight:600;display:none;align-items:center;gap:8px;}
+.set-alert.show{display:flex;}
+.set-missing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;padding:0 28px 20px;}
+.set-missing-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:10px;padding:12px 14px;}
+.set-missing-card .mc-count{font-size:20px;font-weight:700;color:var(--red);}
+.set-missing-card .mc-label{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.set-section-head{padding:16px 28px 8px;display:flex;align-items:center;justify-content:space-between;}
+.set-section-head h3{font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;}
+#addFormRow input,#addFormRow select{height:34px;padding:0 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface2);outline:none;}
+#addFormRow input::placeholder{color:var(--text-muted);}
+#addFormRow input:focus,#addFormRow select:focus{border-color:var(--accent);}
+#addFormRow select option{background:var(--surface2);}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="header-logo">RW</div>
+    <div>
+      <div class="header-title">Property Lifecycle Tracker</div>
+      <div class="header-sub">Ray White Cairns Beaches</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span id="updatedTag" class="updated-tag" style="display:none;"></span>
+    <span id="liveTag" style="display:none;font-size:11px;background:var(--green-soft);color:var(--green);border:1px solid rgba(61,184,122,0.3);border-radius:20px;padding:3px 9px;font-weight:600;">
+      <span style="display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;margin-right:4px;animation:pulse 2s infinite;vertical-align:middle;"></span>LIVE
+    </span>
+    <button onclick="showDebug()" style="background:rgba(255,255,255,0.08);border:1px solid var(--border2);border-radius:7px;padding:4px 10px;font-size:11px;color:var(--text-muted);cursor:pointer;font-family:inherit;">
+      <i class="fas fa-bug"></i> Status
+    </button>
+    <button class="btn btn-ghost" id="autoBtn" onclick="toggleAuto()">
+      <i class="fas fa-sync-alt"></i> <span id="autoBtnLabel">Auto-refresh</span>
+    </button>
+    <label class="btn btn-upload" style="cursor:pointer;">
+      <i class="fas fa-upload"></i> <span id="uploadBtnLabel">Upload VaultRE Feed</span>
+      <input type="file" accept=".xlsx,.xls" style="display:none;" onchange="handleUpload(event)">
+    </label>
+  </div>
+</header>
+
+<nav class="nav-tabs">
+  <button class="nav-tab active" onclick="switchTab('listings')" id="tab-listings">
+    <i class="fas fa-home"></i> Listings <span class="tab-count" id="tc-listings">—</span>
+  </button>
+  <button class="nav-tab" onclick="switchTab('auctions')" id="tab-auctions">
+    <i class="fas fa-gavel"></i> Auctions <span class="tab-count" id="tc-auctions">—</span>
+  </button>
+  <button class="nav-tab" onclick="switchTab('forms')" id="tab-forms">
+    <i class="fas fa-file-signature"></i> Form Requests <span class="tab-count" id="tc-forms">—</span>
+  </button>
+  <button class="nav-tab" onclick="switchTab('settlements')" id="tab-settlements">
+    <i class="fas fa-handshake"></i> Settlements <span class="tab-count" id="tc-settlements">—</span>
+  </button>
+</nav>
+
+<!-- ══ LISTINGS ══ -->
+<div class="board-section active" id="section-listings">
+  <div class="stats-row listing-stats">
+    <div class="stat"><div class="stat-icon sal"><i class="fas fa-home"></i></div><div><div class="stat-label">Total Active</div><div class="stat-value" id="ls-total">—</div></div></div>
+    <div class="stat"><div class="stat-icon sal"><i class="fas fa-rocket"></i></div><div><div class="stat-label">Pre-Launch <span title="Auto: no portals ticked" style="font-size:10px;opacity:0.6;cursor:help;">&#9432;</span></div><div class="stat-value" id="ls-prelaunch">—</div></div></div>
+    <div class="stat"><div class="stat-icon pink"><i class="fas fa-tag"></i></div><div><div class="stat-label">Listing</div><div class="stat-value" id="ls-listing">—</div></div></div>
+    <div class="stat"><div class="stat-icon amber"><i class="fas fa-file-signature"></i></div><div><div class="stat-label">Conditional</div><div class="stat-value" id="ls-conditional">—</div></div></div>
+    <div class="stat"><div class="stat-icon red"><i class="fas fa-check-double"></i></div><div><div class="stat-label">Unconditional</div><div class="stat-value" id="ls-unconditional">—</div></div></div>
+    <div class="stat"><div class="stat-icon green"><i class="fas fa-calendar-check"></i></div><div><div class="stat-label">Settling ≤ 7d</div><div class="stat-value" id="ls-settling">—</div></div></div>
+  </div>
+  <div class="filter-bar">
+    <input type="text" id="lSearch" oninput="renderListings()" placeholder="Search address or agent…">
+    <div class="filter-sep"></div>
+    <select id="lStatus" onchange="renderListings()">
+      <option value="">All Statuses</option>
+      <option value="pre_launch">Pre-Launch</option>
+      <option value="listing">Listing</option>
+      <option value="conditional">Conditional</option>
+      <option value="unconditional">Unconditional</option>
+    </select>
+    <select id="lMethod" onchange="renderListings()">
+      <option value="">All Methods</option>
+      <option value="Auction">Auction</option>
+      <option value="Private Treaty">Private Treaty</option>
+      <option value="Tender">Tender</option>
+    </select>
+    <select id="lAgent" onchange="renderListings()"><option value="">All Agents</option></select>
+    <select id="lType" onchange="renderListings()">
+      <option value="">All Types</option>
+      <option value="House">House</option><option value="Unit">Unit</option>
+      <option value="Apartment">Apartment</option><option value="Townhouse">Townhouse</option><option value="Land">Land</option>
+    </select>
+    <button class="btn-clear" onclick="clearListingFilters()"><i class="fas fa-times"></i> Clear</button>
+    <div class="result-count" id="lCount"></div>
+  </div>
+  <!-- Pre-launch add bar -->
+  <div class="pre-add-row" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    <span style="font-size:12px;color:var(--text-muted);font-weight:500;white-space:nowrap;" title="Properties with no portals ticked in VaultRE appear here automatically. You can also add manually."><i class="fas fa-rocket" style="margin-right:4px;"></i>Add Pre-Launch manually:</span>
+    <input type="text" id="plAddr" placeholder="Property address" style="min-width:220px;">
+    <input type="text" id="plAgent" placeholder="Agent name" style="width:140px;">
+    <button class="btn btn-upload btn-sm" onclick="addPreLaunch()">Add</button>
+  </div>
+  <div class="board-wrap">
+    <div class="board" id="listingBoard"></div>
+  </div>
+  <div id="listingEmpty" style="display:none;">
+    <div class="empty-state">
+      <div class="empty-icon"><i class="fas fa-file-excel"></i></div>
+      <h2>No data loaded</h2>
+      <p>Upload your VaultRE Automation Feed to populate the listings board.</p>
+      <label class="btn-upload-lg"><i class="fas fa-upload"></i> Upload VaultRE Feed
+        <input type="file" accept=".xlsx,.xls" style="display:none;" onchange="handleUpload(event)">
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- ══ AUCTIONS ══ -->
+<div class="board-section" id="section-auctions">
+  <div class="stats-row auction-stats" style="position:relative;">
+    <button onclick="toggleVenueConfig()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:transparent;border:1px solid var(--border2);border-radius:7px;padding:5px 10px;font-size:11px;color:var(--text-muted);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;" title="Configure venue keywords for auto-assign">
+      <i class="fas fa-sliders-h"></i> Venue keywords
+    </button>
+    <div class="stat"><div class="stat-icon sal"><i class="fas fa-gavel"></i></div><div><div class="stat-label">Total Auctions</div><div class="stat-value" id="as-total">—</div></div></div>
+    <div class="stat"><div class="stat-icon sal"><i class="fas fa-map-marker-alt"></i></div><div><div class="stat-label">Onsite</div><div class="stat-value" id="as-onsite">—</div></div></div>
+    <div class="stat"><div class="stat-icon pink"><i class="fas fa-calendar-star" style="font-size:12px;"></i><i class="fas fa-calendar-alt"></i></div><div><div class="stat-label">Auction Event</div><div class="stat-value" id="as-event">—</div></div></div>
+    <div class="stat"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div><div class="stat-label">Fully Prepared</div><div class="stat-value" id="as-ready">—</div></div></div>
+    <div class="stat"><div class="stat-icon amber"><i class="fas fa-tasks"></i></div><div><div class="stat-label">Avg. Completion</div><div class="stat-value" id="as-avg">—</div></div></div>
+  </div>
+  <div class="filter-bar">
+    <input type="text" id="aSearch" oninput="renderAuctions()" placeholder="Search address or agent…">
+    <div class="filter-sep"></div>
+    <select id="aAgent" onchange="renderAuctions()"><option value="">All Agents</option></select>
+    <select id="aTypeFilter" onchange="renderAuctions()">
+      <option value="">Onsite & Event</option>
+      <option value="onsite">Onsite only</option>
+      <option value="event">Auction Event only</option>
+      <option value="unset">Not yet categorised</option>
+    </select>
+    <div class="filter-sep"></div>
+    <label class="btn btn-ghost" style="cursor:pointer;font-size:12px;" title="Upload the Auction Tracker sheet exported from Google Sheets as .xlsx">
+      <i class="fas fa-table"></i> Upload Auction Sheet
+      <input type="file" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleAuctionSheetUpload(event)">
+    </label>
+    <button class="btn-clear" onclick="clearAucFilters()"><i class="fas fa-times"></i> Clear</button>
+    <button class="btn-clear" onclick="resetAucAutoAssign()" title="Re-run auto-assign from venue data for all properties">
+      <i class="fas fa-magic"></i> Re-assign
+    </button>
+    <button class="btn-outline-sm" onclick="toggleCatPanel()" style="margin-left:4px;">
+      <i class="fas fa-layer-group"></i> Manage Event Categories
+    </button>
+    <div class="result-count" id="aCount"></div>
+  </div>
+  <div id="aucSheetTag" style="display:none;background:#232127;border-bottom:1px solid var(--border);padding:6px 28px;font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+    <i class="fas fa-check-circle" style="color:var(--green);"></i>
+    <span id="aucSheetTagText"></span>
+    <span style="margin-left:auto;font-size:10px;opacity:0.6;">Venue auto-assigns on upload</span>
+  </div>
+  <!-- Venue keyword config panel -->
+  <div class="venue-config-panel" id="venueConfigPanel">
+    <div class="venue-config-section">
+      <h4><i class="fas fa-map-marker-alt" style="margin-right:4px;color:var(--accent);"></i>Onsite keywords</h4>
+      <div class="keyword-list" id="kwOnsite"></div>
+      <div class="kw-add-row">
+        <input type="text" id="kwOnsiteInput" placeholder="e.g. on-site" onkeydown="if(event.key==='Enter')addKeyword('onsite')">
+        <button class="kw-add-btn onsite" onclick="addKeyword('onsite')"><i class="fas fa-plus"></i> Add</button>
+      </div>
+    </div>
+    <div class="venue-config-section">
+      <h4><i class="fas fa-calendar-alt" style="margin-right:4px;color:var(--pink);"></i>Event keywords</h4>
+      <div class="keyword-list" id="kwEvent"></div>
+      <div class="kw-add-row">
+        <input type="text" id="kwEventInput" placeholder="e.g. bluewater" onkeydown="if(event.key==='Enter')addKeyword('event')">
+        <button class="kw-add-btn event" onclick="addKeyword('event')"><i class="fas fa-plus"></i> Add</button>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);align-self:flex-end;padding-bottom:4px;max-width:200px;line-height:1.5;">
+      Keywords are matched against the Venue field in the auction sheet. Case-insensitive. Saved in your browser.
+    </div>
+  </div>
+  <!-- Event category manager panel -->
+  <div class="event-cat-panel" id="eventCatPanel">
+    <h4><i class="fas fa-calendar-alt" style="margin-right:6px;color:var(--pink);"></i>Auction Event Categories</h4>
+    <div class="cat-list" id="catList"></div>
+    <div class="cat-add-row">
+      <input type="text" id="catName" placeholder="Venue name (e.g. Bluewater Tavern)" style="min-width:220px;">
+      <input type="date" id="catDate" style="width:150px;">
+      <button class="btn btn-upload btn-sm" onclick="addEventCategory()"><i class="fas fa-plus"></i> Add Category</button>
+      <button class="btn-clear" onclick="toggleCatPanel()">Close</button>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">Properties whose venue contains the name AND whose auction date matches will auto-group into this category.</p>
+  </div>
+  <div class="board-wrap">
+    <div class="board" id="auctionBoard"></div>
+  </div>
+  <div id="auctionEmpty" style="display:none;">
+    <div class="empty-state">
+      <div class="empty-icon"><i class="fas fa-gavel"></i></div>
+      <h2>No auctions found</h2>
+      <p>Upload a VaultRE feed with Auction method properties to populate this board.</p>
+      <label class="btn-upload-lg"><i class="fas fa-upload"></i> Upload VaultRE Feed
+        <input type="file" accept=".xlsx,.xls" style="display:none;" onchange="handleUpload(event)">
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FORMS ══ -->
+<div class="board-section" id="section-forms">
+  <div class="stats-row forms-stats">
+    <div class="stat"><div class="stat-icon green"><i class="fas fa-file-alt"></i></div><div><div class="stat-label">Form 6 Requests</div><div class="stat-value" id="fs-f6">—</div></div></div>
+    <div class="stat"><div class="stat-icon blue"><i class="fas fa-file-contract"></i></div><div><div class="stat-label">Contract Requests</div><div class="stat-value" id="fs-contract">—</div></div></div>
+    <div class="stat"><div class="stat-icon amber"><i class="fas fa-hourglass-half"></i></div><div><div class="stat-label">Pending</div><div class="stat-value" id="fs-pending">—</div></div></div>
+    <div class="stat"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div><div class="stat-label">Completed</div><div class="stat-value" id="fs-complete">—</div></div></div>
+  </div>
+  <div class="filter-bar">
+    <input type="text" id="fSearch" oninput="renderForms()" placeholder="Search address or agent…">
+    <div class="filter-sep"></div>
+    <select id="fFormType" onchange="renderForms()">
+      <option value="">All Types</option><option value="f6">Form 6</option><option value="contract">Contract</option>
+    </select>
+    <div class="filter-sep"></div>
+    <button class="btn-outline-sm" onclick="addFormRequest()"><i class="fas fa-plus"></i> Add Request</button>
+    <button class="btn-clear" onclick="clearFormFilters()"><i class="fas fa-times"></i> Clear</button>
+    <div class="result-count" id="fCount"></div>
+  </div>
+  <div id="addFormRow" style="display:none;background:#232127;border-bottom:1px solid var(--border);padding:12px 28px;">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <input type="text" id="newAddr" placeholder="Property address" style="min-width:240px;">
+      <input type="text" id="newAgent" placeholder="Agent name" style="width:160px;">
+      <select id="newType"><option value="f6">Form 6</option><option value="contract">Contract</option></select>
+      <button class="btn btn-upload btn-sm" onclick="submitFormRequest()">Add</button>
+      <button class="btn-clear" onclick="document.getElementById('addFormRow').style.display='none'">Cancel</button>
+    </div>
+  </div>
+  <div class="board-wrap">
+    <div style="display:flex;gap:20px;align-items:flex-start;">
+      <div style="flex:1;min-width:300px;">
+        <div class="col-head form-f6" style="margin-bottom:10px;border-radius:var(--radius);">
+          <span><i class="fas fa-file-alt" style="margin-right:6px;"></i>Form 6 Requests</span>
+          <span class="col-badge" id="f6-badge">0</span>
+        </div>
+        <div id="f6Cards" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+      <div style="flex:1;min-width:300px;">
+        <div class="col-head form-contract" style="margin-bottom:10px;border-radius:var(--radius);">
+          <span><i class="fas fa-file-contract" style="margin-right:6px;"></i>Contract Requests</span>
+          <span class="col-badge" id="contract-badge">0</span>
+        </div>
+        <div id="contractCards" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SETTLEMENTS ══ -->
+<div class="board-section" id="section-settlements">
+  <div class="stats-row" style="grid-template-columns:repeat(4,1fr);">
+    <div class="stat"><div class="stat-icon red"><i class="fas fa-exclamation-circle"></i></div><div><div class="stat-label">Past Due</div><div class="stat-value" id="ss-overdue">—</div></div></div>
+    <div class="stat"><div class="stat-icon amber"><i class="fas fa-bolt"></i></div><div><div class="stat-label">Settling Today</div><div class="stat-value" id="ss-today">—</div></div></div>
+    <div class="stat"><div class="stat-icon sal"><i class="fas fa-list-check"></i></div><div><div class="stat-label">Total on Board</div><div class="stat-value" id="ss-total">—</div></div></div>
+    <div class="stat"><div class="stat-icon red"><i class="fas fa-folder-open"></i></div><div><div class="stat-label">Missing Docs</div><div class="stat-value" id="ss-missingdocs">—</div></div></div>
+  </div>
+  <div class="set-alert" id="setAlert"><i class="fas fa-exclamation-triangle"></i><span id="setAlertMsg"></span></div>
+  <div class="set-filter-bar">
+    <input type="text" id="sSearch" oninput="renderSettlements()" placeholder="Search address or agent…">
+    <div class="filter-sep"></div>
+    <select id="sUrgency" onchange="renderSettlements()">
+      <option value="">Past due &amp; today</option>
+      <option value="overdue">Past due only</option>
+      <option value="today">Today only</option>
+    </select>
+    <select id="sAgent" onchange="renderSettlements()"><option value="">All Agents</option></select>
+    <select id="sMissingDocs" onchange="renderSettlements()">
+      <option value="">All doc status</option>
+      <option value="missing">Has missing docs</option>
+      <option value="complete">Docs complete</option>
+    </select>
+    <button class="btn-clear" onclick="clearSetFilters()"><i class="fas fa-times"></i> Clear</button>
+    <div class="result-count" id="sCount"></div>
+  </div>
+  <!-- Missing docs summary -->
+  <div id="setMissingSection" style="display:none;">
+    <div class="set-section-head"><h3><i class="fas fa-folder-open" style="margin-right:6px;"></i>Missing documents summary</h3></div>
+    <div class="set-missing-grid" id="setMissingGrid"></div>
+  </div>
+  <!-- Table -->
+  <div class="set-table-wrap">
+    <table class="set-table">
+      <thead>
+        <tr>
+          <th>Property</th>
+          <th>Settlement Date</th>
+          <th>Days</th>
+          <th>Urgency</th>
+          <th>Sale Price</th>
+          <th>Documents</th>
+          <th>Links</th>
+        </tr>
+      </thead>
+      <tbody id="setTableBody"></tbody>
+    </table>
+  </div>
+  <div id="setEmpty" style="display:none;">
+    <div class="empty-state">
+      <div class="empty-icon"><i class="fas fa-handshake"></i></div>
+      <h2>No settlements loaded</h2>
+      <p>Upload your VaultRE Feed — unconditional properties whose settlement date is today or past will appear here automatically.</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal" onclick="bgClose(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2 id="modalTitle">Property Details</h2><p id="modalSub"></p></div>
+      <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- Login Modal -->
+<div id="loginModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);">
+  <div style="background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:380px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.5);">
+    <div style="background:#1c1b1f;padding:20px 24px 16px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:36px;height:36px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#2c2b30;font-size:14px;">RW</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--text-bright);">Property Lifecycle Tracker</div>
+          <div style="font-size:11px;color:var(--text-muted);">Ray White Cairns Beaches</div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:24px;">
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Sign in to sync your data across all users.</div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:5px;">Username</label>
+        <input id="loginUser" type="text" placeholder="Enter username" autocomplete="username"
+          style="width:100%;height:38px;padding:0 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface2);outline:none;box-sizing:border-box;"
+          onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:5px;">Password</label>
+        <input id="loginPass" type="password" placeholder="Enter password" autocomplete="current-password"
+          style="width:100%;height:38px;padding:0 12px;border:1px solid var(--border2);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:var(--surface2);outline:none;box-sizing:border-box;"
+          onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button onclick="doLogin()" style="width:100%;height:40px;background:var(--accent);color:#2c2b30;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">
+        Sign In
+      </button>
+      <div id="loginError" style="display:none;margin-top:10px;font-size:12px;color:var(--red);text-align:center;"></div>
+      <button onclick="skipLogin()" style="width:100%;margin-top:10px;height:36px;background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">
+        Use offline (no sync)
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Debug Modal -->
+<div id="debugModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--surface);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:560px;overflow:hidden;">
+    <div style="background:#1c1b1f;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-weight:600;color:var(--text-bright);font-size:14px;"><i class="fas fa-bug" style="margin-right:8px;color:var(--accent);"></i>Live Sync Status</span>
+      <button onclick="document.getElementById('debugModal').style.display='none'" style="background:var(--surface2);border:none;color:var(--text-muted);border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:13px;">✕</button>
+    </div>
+    <div style="padding:18px 20px;font-size:13px;line-height:1.8;">
+      <div id="debugContent" style="font-family:monospace;font-size:12px;color:var(--text);"></div>
+    </div>
+    <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;">
+      <button onclick="retryLive()" style="background:var(--accent);color:#2c2b30;border:none;border-radius:7px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;"><i class="fas fa-sync"></i> Retry Now</button>
+      <button onclick="document.getElementById('debugModal').style.display='none'" style="background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:7px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:inherit;">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+// ▼▼▼ PASTE YOUR DRIVE JSON URL HERE after running setupLiveSync() in GAS ▼▼▼
+const LIVE_JSON_URL = 'https://script.google.com/macros/s/AKfycbxcBgDup5H2SfyREqaPggtEyGBu25IieJh3YzmXN9Y34qibOoUMMXQSbqoaREDGDyCX/exec';
+// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+// ▼▼▼ PASTE YOUR RAILWAY SYNC API URL HERE after deploying ▼▼▼
+const SYNC_API_URL = 'https://vaultresync-production.up.railway.app';
+// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+let syncToken = localStorage.getItem('syncToken') || '';
+let syncUser  = localStorage.getItem('syncUser')  || '';
+let syncDirty = {}; // keys that need pushing to server
+
+let allProperties = [], autoInterval = null, lastFile = null;
+let liveRefreshInterval = null;
+let knownIds = new Set(JSON.parse(localStorage.getItem('knownIds')||'[]'));
+let preLaunch = JSON.parse(localStorage.getItem('preLaunch')||'[]');
+let aucMeta      = JSON.parse(localStorage.getItem('aucMeta')||'{}');   // {id: {type:'onsite'|'event', venue:'', auctionDate:''}}
+let aucSheetProps = JSON.parse(localStorage.getItem('aucSheetProps')||'[]');
+// Event categories: [{id, name, date, collapsed}]
+// name = venue keyword pattern, date = 'yyyy-MM-dd', collapsed = bool
+let aucEventCats = JSON.parse(localStorage.getItem('aucEventCats')||'[]');
+// Track which cols/groups are collapsed
+let aucColCollapsed = JSON.parse(localStorage.getItem('aucColCollapsed')||'{}'); // synthetic props from auction sheet upload
+let aucChecks = JSON.parse(localStorage.getItem('aucChecks')||'{}');
+let formRequests = JSON.parse(localStorage.getItem('formRequests')||'[]');
+let formChecks   = JSON.parse(localStorage.getItem('formChecks')||'{}');
+
+const AUC_CHECKLIST = ['Confirmed','Is Property Live?','Added to Auctions Live','QR Code & Link','Added to Calendar','Auction Form 6 on File','Auctioneer Fee Paid','Brochures','Sellers Disclosure','Auction Contract','Upload DOCS to AL','Drafted Contract in Docusign','Booked with RW Corporate','Auctioneer Brief','Order of Sale','Bidders Printed'];
+const F6_CHECKLIST = ['Authority signed by vendor','Form 6 uploaded to VaultRE','Sent to admin for filing','Listed on portal','Marketing authorised'];
+const CONTRACT_CHECKLIST = ['Contract prepared','Agent reviewed','Sent to vendor','Signed & returned','Filed in VaultRE','Copy to solicitor'];
+
+// ── PIPELINE COLUMNS ───────────────────────────────────────────────────────
+const LISTING_COLS = [
+  {id:'pre_launch',  label:'Pre-Launch',   cls:'pre_launch',  tip:'No portals ticked in VaultRE'},
+  {id:'listing',     label:'Listing',      cls:'listing'},
+  {id:'conditional', label:'Conditional',  cls:'conditional'},
+  {id:'unconditional',label:'Unconditional',cls:'unconditional'},
+];
+
+// ── TAB ────────────────────────────────────────────────────────────────────
+function switchTab(tab){
+  document.querySelectorAll('.board-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('section-'+tab).classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+// ── UPLOAD ─────────────────────────────────────────────────────────────────
+function handleUpload(e){const f=e.target.files[0];if(!f)return;lastFile=f;readFile(f);e.target.value='';}
+function readFile(file){
+  const r=new FileReader();
+  r.onload=e=>{try{parseWorkbook(XLSX.read(e.target.result,{type:'array',cellDates:true}),file.name);}catch(err){toast('Failed to read: '+err.message,'error');}};
+  r.readAsArrayBuffer(file);
+}
+function parseWorkbook(wb,name){
+  const rows=[];
+  const src=wb.SheetNames.includes('All Active')?['All Active']:['Listing','Conditional','Unconditional'];
+  src.forEach(s=>{if(!wb.SheetNames.includes(s))return;XLSX.utils.sheet_to_json(wb.Sheets[s],{defval:''}).forEach(r=>rows.push(normProp(r)));});
+  if(!rows.length){toast('No property data found.','error');return;}
+
+  // Detect settled: was unconditional before, now missing from feed
+  const newIds = new Set(rows.map(p=>String(p.id)));
+  const prevUnconditional = allProperties.filter(p=>p.status==='unconditional').map(p=>String(p.id));
+  prevUnconditional.forEach(id=>{
+    if(!newIds.has(id)) toast('Property removed from feed — likely settled','info');
+  });
+
+  // Exclude settled status (just in case feed includes them)
+  allProperties = rows.filter(p=>p.status!=='settled');
+
+  // Track all seen IDs so we can detect departures next refresh
+  allProperties.forEach(p=>knownIds.add(String(p.id)));
+  localStorage.setItem('knownIds',JSON.stringify([...knownIds]));
+
+  populateAgentFilters();
+  renderAll();
+  document.getElementById('listingEmpty').style.display='none';
+  document.getElementById('auctionEmpty').style.display='none';
+  const t=new Date().toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
+  const tag=document.getElementById('updatedTag');tag.style.display='inline-flex';tag.textContent='Updated '+t;
+  toast('Loaded '+allProperties.length+' properties from '+name,'success');
+}
+function normProp(r){
+  const agents=(r['Agent(s)']||'').toString().split(';').map(a=>a.trim()).filter(Boolean);
+  const publishedToWeb=r['Published To Web']||'';
+  const vaultStatus=(r['Status']||'').toLowerCase().trim().replace(/\s+/g,'_');
+  // Pre-Launch: portals not ticked (Published To Web is blank) AND not already under contract/conditional/unconditional
+  const contractStages=['conditional','unconditional','under_contract','settled'];
+  const isPreLaunch = !publishedToWeb && !contractStages.includes(vaultStatus);
+  const status = isPreLaunch ? 'pre_launch' : vaultStatus;
+  return{
+    id:String(r['Property ID']||r['Sale Life ID']||Math.random()),
+    saleLifeId:r['Sale Life ID']||'',propertyId:r['Property ID']||'',
+    address:r['Display Address']||`${r['Unit/Street No']||''} ${r['Street']||''}, ${r['Suburb']||''}`.trim(),
+    suburb:r['Suburb']||'',status,vaultStatus,
+    propertyType:r['Property Type']||'',bed:r['Bed']||'',bath:r['Bath']||'',garages:r['Garages']||'',
+    method:r['Method of Sale']||'',displayPrice:r['Display Price']||'',salePrice:r['Sale Price']||'',
+    settlementDate:parseDate(r['Settlement Date']),authorityStart:r['Authority Start']||'',
+    authorityEnd:r['Authority End']||'',agents,portalStatus:r['Portal Status']||'',
+    modified:r['Modified']||'',publishedToWeb,
+  };
+}
+function parseDate(v){if(!v)return null;if(v instanceof Date)return isNaN(v)?null:v;if(typeof v==='number')return new Date((v-25569)*86400*1000);const d=new Date(v);return isNaN(d)?null:d;}
+
+// ── FILTERS ─────────────────────────────────────────────────────────────────
+function populateAgentFilters(){
+  const agents=[...new Set(allProperties.flatMap(p=>p.agents))].sort();
+  ['lAgent','aAgent'].forEach(id=>{const sel=document.getElementById(id),cur=sel.value;while(sel.options.length>1)sel.remove(1);agents.forEach(a=>sel.add(new Option(a,a)));if(cur)sel.value=cur;});
+}
+function renderAll(){renderListings();renderAuctions();renderForms();buildSettlementsFromFeed();}
+
+// ── PRE-LAUNCH ──────────────────────────────────────────────────────────────
+function addPreLaunch(){
+  const addr=document.getElementById('plAddr').value.trim();
+  const agent=document.getElementById('plAgent').value.trim();
+  if(!addr){toast('Enter a property address','error');return;}
+  preLaunch.push({id:'pl_'+Date.now(),address:addr,agents:agent?[agent]:[],status:'pre_launch',method:'',propertyType:'',bed:'',bath:'',garages:'',displayPrice:'',settlementDate:null,suburb:'',propertyId:'',saleLifeId:'',salePrice:'',portalStatus:'',authorityStart:'',authorityEnd:'',modified:'',publishedToWeb:''});
+  localStorage.setItem('preLaunch',JSON.stringify(preLaunch));pushState('preLaunch',preLaunch);
+  document.getElementById('plAddr').value='';document.getElementById('plAgent').value='';
+  toast('Pre-launch added','success');renderListings();
+}
+function removePreLaunch(id){preLaunch=preLaunch.filter(p=>p.id!==id);localStorage.setItem('preLaunch',JSON.stringify(preLaunch));pushState('preLaunch',preLaunch);renderListings();}
+
+// ── LISTINGS BOARD ───────────────────────────────────────────────────────────
+function renderListings(){
+  const q=document.getElementById('lSearch').value.toLowerCase();
+  const fs=document.getElementById('lStatus').value,fm=document.getElementById('lMethod').value;
+  const fa=document.getElementById('lAgent').value,ft=document.getElementById('lType').value;
+
+  // Combine VaultRE props (excl settled) + manual pre-launch entries
+  const combined=[...allProperties,...preLaunch];
+  const filtered=combined.filter(p=>{
+    if(fs&&p.status!==fs)return false;
+    if(fm&&p.method!==fm)return false;
+    if(fa&&!p.agents.includes(fa))return false;
+    if(ft&&p.propertyType!==ft)return false;
+    if(q&&!(p.address+' '+p.agents.join(' ')+' '+(p.suburb||'')).toLowerCase().includes(q))return false;
+    return true;
+  });
+
+  const today=new Date();today.setHours(0,0,0,0);const in7=new Date(today);in7.setDate(today.getDate()+7);
+  document.getElementById('ls-total').textContent=filtered.length;
+  document.getElementById('ls-prelaunch').textContent=filtered.filter(p=>p.status==='pre_launch').length;
+  document.getElementById('ls-listing').textContent=filtered.filter(p=>p.status==='listing').length;
+  document.getElementById('ls-conditional').textContent=filtered.filter(p=>p.status==='conditional').length;
+  document.getElementById('ls-unconditional').textContent=filtered.filter(p=>p.status==='unconditional').length;
+  document.getElementById('ls-settling').textContent=filtered.filter(p=>{if(!p.settlementDate)return false;const d=new Date(p.settlementDate);d.setHours(0,0,0,0);return d>=today&&d<=in7;}).length;
+  document.getElementById('lCount').textContent=filtered.length+' properties';
+  document.getElementById('tc-listings').textContent=filtered.length;
+
+  const board=document.getElementById('listingBoard');board.innerHTML='';
+  if(!filtered.length&&!allProperties.length&&!preLaunch.length){document.getElementById('listingEmpty').style.display='block';return;}
+  document.getElementById('listingEmpty').style.display='none';
+
+  LISTING_COLS.forEach(col=>{
+    const items=filtered.filter(p=>p.status===col.id);
+    const el=document.createElement('div');el.className='col';
+    el.innerHTML=`<div class="col-head ${col.cls}"><span>${col.label}</span><span class="col-badge">${items.length}</span></div><div class="col-cards" id="lc-${col.id}"></div>`;
+    board.appendChild(el);
+    const cont=el.querySelector(`#lc-${col.id}`);
+    if(!items.length){cont.innerHTML=`<div class="empty-col"><i class="fas fa-inbox"></i>No properties</div>`;return;}
+    items.forEach(p=>{
+      const card=document.createElement('div');card.className=`card ${col.id}`;
+      let banner='';
+      if(p.settlementDate){
+        const sd=new Date(p.settlementDate);sd.setHours(0,0,0,0);const diff=Math.ceil((sd-today)/86400000);
+        if(diff<0){card.classList.add('settle-overdue');banner=`<div class="settle-banner overdue"><i class="fas fa-exclamation-triangle"></i> Overdue by ${Math.abs(diff)}d</div>`;}
+        else if(diff===0){card.classList.add('settle-soon');banner=`<div class="settle-banner today-cls"><i class="fas fa-bolt"></i> Settling today!</div>`;}
+        else if(diff<=7){card.classList.add('settle-soon');banner=`<div class="settle-banner soon"><i class="fas fa-clock"></i> ${diff}d — ${fmtDate(p.settlementDate)}</div>`;}
+        else{banner=`<div class="settle-banner upcoming"><i class="fas fa-calendar-check"></i> ${fmtDate(p.settlementDate)}</div>`;}
+      }
+      const pills=p.agents.slice(0,2).map(a=>`<span class="agent-pill"><i class="fas fa-user" style="font-size:9px;"></i>${a}</span>`).join('');
+      const beds=[p.bed&&`<i class="fas fa-bed"></i>${p.bed}`,p.bath&&`<i class="fas fa-bath"></i>${p.bath}`,p.garages&&`<i class="fas fa-car"></i>${p.garages}`].filter(Boolean).join('<span style="margin:0 3px;color:var(--border2);">·</span>');
+      const isManual=p.id.toString().startsWith('pl_');
+      card.innerHTML=`
+        <div class="card-addr">${p.address}</div>
+        ${pills?`<div class="card-agents">${pills}</div>`:''}
+        ${beds?`<div class="card-row">${beds}</div>`:''}
+        ${p.displayPrice?`<div class="card-price">${p.displayPrice}</div>`:''}
+        <div class="card-tags">
+          ${p.method?`<span class="tag tag-method">${p.method}</span>`:''}
+          ${p.propertyType?`<span class="tag tag-type">${p.propertyType}</span>`:''}
+          ${isManual?`<span class="tag" style="background:rgba(138,138,142,0.15);color:var(--text-muted);">Manual</span>`:''}
+        </div>
+        ${banner}
+        ${isManual?`<button onclick="removePreLaunch('${p.id}')" style="margin-top:8px;font-size:10px;background:var(--red-soft);color:var(--red);border:none;border-radius:5px;padding:2px 8px;cursor:pointer;font-family:inherit;"><i class="fas fa-trash" style="margin-right:3px;"></i>Remove</button>`:''}
+      `;
+      if(!isManual) card.onclick=e=>{if(e.target.closest('button'))return;openListingModal(p);}
+      cont.appendChild(card);
+    });
+  });
+}
+function clearListingFilters(){['lSearch','lStatus','lMethod','lAgent','lType'].forEach(id=>{const e=document.getElementById(id);e.tagName==='INPUT'?e.value='':e.value='';});renderListings();}
+
+// ── AUCTION BOARD ────────────────────────────────────────────────────────────
+const AUC_COLS=[
+  {id:'onsite', label:'Onsite Auction', cls:'auc-onsite', badge:'badge-onsite'},
+  {id:'event',  label:'Auction Event',  cls:'auc-event',  badge:'badge-event'},
+  {id:'unset',  label:'Not Categorised',cls:'auc-unset',  badge:'badge-unset'},
+];
+
+function getAucType(p){return (aucMeta['auc_'+p.id]||{}).type||'unset';}
+function getAucDate(p){return (aucMeta['auc_'+p.id]||{}).auctionDate||'';}
+function getAucVenue(p){return (aucMeta['auc_'+p.id]||{}).venue||'';}
+function getAucTime(p){return (aucMeta['auc_'+p.id]||{}).auctionTime||'';}
+
+function setAucType(id,type){
+  // Legacy — use setAucTypeManual for user-initiated changes
+  if(!aucMeta[id])aucMeta[id]={};
+  aucMeta[id].type=type;
+  localStorage.setItem('aucMeta',JSON.stringify(aucMeta));pushState('aucMeta',aucMeta);
+  renderAuctions();
+}
+function setAucDate(id,val){
+  if(!aucMeta[id])aucMeta[id]={};
+  aucMeta[id].auctionDate=val;
+  localStorage.setItem('aucMeta',JSON.stringify(aucMeta));pushState('aucMeta',aucMeta);
+}
+function setAucVenue(id,val){
+  if(!aucMeta[id])aucMeta[id]={};
+  aucMeta[id].venue=val;
+  localStorage.setItem('aucMeta',JSON.stringify(aucMeta));pushState('aucMeta',aucMeta);
+}
+
+function renderAuctions(){
+  const q=document.getElementById('aSearch').value.toLowerCase();
+  const fa=document.getElementById('aAgent').value;
+  const tf=document.getElementById('aTypeFilter').value;
+  const today=new Date();today.setHours(0,0,0,0);
+
+  // Merge VaultRE + sheet props
+  const vaultAuctions=allProperties.filter(p=>(p.method||'').toLowerCase().includes('auction'));
+  const vaultIds=new Set(vaultAuctions.map(p=>String(p.propertyId)));
+  const sheetOnly=aucSheetProps.filter(p=>!vaultIds.has(String(p.propertyId)));
+  let auctions=[...vaultAuctions,...sheetOnly];
+
+  // Remove properties where auction date has passed
+  auctions=auctions.filter(p=>{
+    const d=getAucDate(p);
+    if(!d)return true; // no date set — keep
+    const ad=new Date(d);ad.setHours(0,0,0,0);
+    return ad>=today; // remove if past
+  });
+
+  const filtered=auctions.filter(p=>{
+    if(fa&&!p.agents.includes(fa))return false;
+    if(q&&!(p.address+' '+p.agents.join(' ')).toLowerCase().includes(q))return false;
+    if(tf&&getAucType(p)!==tf)return false;
+    return true;
+  });
+
+  document.getElementById('as-total').textContent=auctions.length;
+  document.getElementById('as-onsite').textContent=auctions.filter(p=>getAucType(p)==='onsite').length;
+  document.getElementById('as-event').textContent=auctions.filter(p=>getAucType(p)==='event').length;
+  document.getElementById('tc-auctions').textContent=auctions.length;
+  document.getElementById('aCount').textContent=filtered.length+' auctions';
+
+  let total=0,fullyReady=0;
+  auctions.forEach(p=>{const checks=aucChecks['auc_'+p.id]||{};if(AUC_CHECKLIST.filter(f=>checks[f]).length===AUC_CHECKLIST.length)fullyReady++;total+=AUC_CHECKLIST.filter(f=>checks[f]).length;});
+  document.getElementById('as-ready').textContent=fullyReady;
+  document.getElementById('as-avg').textContent=auctions.length?Math.round(total/auctions.length)+'/'+AUC_CHECKLIST.length:'—';
+
+  const board=document.getElementById('auctionBoard');board.innerHTML='';
+  if(!auctions.length){document.getElementById('auctionEmpty').style.display='block';return;}
+  document.getElementById('auctionEmpty').style.display='none';
+
+  // ── Onsite column (collapsible) ──────────────────────────────────────────
+  // Sort by Order of Sale (numeric, blanks at end)
+  function sortByOrder(arr){
+    return [...arr].sort((a,b)=>{
+      const oa=parseInt((aucMeta['auc_'+a.id]||{}).orderOfSale)||9999;
+      const ob=parseInt((aucMeta['auc_'+b.id]||{}).orderOfSale)||9999;
+      return oa-ob;
+    });
+  }
+  const onsiteItems=sortByOrder(filtered.filter(p=>getAucType(p)==='onsite'));
+  const onsiteCollapsed=!!aucColCollapsed['onsite'];
+  const onsiteCol=document.createElement('div');onsiteCol.className='col';onsiteCol.style.width='320px';
+  onsiteCol.innerHTML=`
+    <div class="col-head auc-onsite" style="cursor:pointer;" onclick="toggleColCollapse('onsite')">
+      <span><i class="fas fa-map-marker-alt" style="margin-right:6px;"></i>Onsite Auction</span>
+      <span style="display:flex;align-items:center;gap:6px;">
+        <span class="col-badge">${onsiteItems.length}</span>
+        <i class="fas fa-chevron-down auc-group-chevron ${onsiteCollapsed?'rotated':''}"></i>
+      </span>
+    </div>
+    <div id="ac-onsite" class="auc-event-group-body ${onsiteCollapsed?'hidden':''}"></div>`;
+  board.appendChild(onsiteCol);
+  const onsiteCont=onsiteCol.querySelector('#ac-onsite');
+  if(!onsiteItems.length){onsiteCont.innerHTML=`<div class="empty-col"><i class="fas fa-inbox"></i>No onsite auctions</div>`;}
+  else onsiteItems.forEach(p=>onsiteCont.appendChild(buildAucCard(p,{id:'onsite',label:'Onsite Auction',cls:'auc-onsite',badge:'badge-onsite'})));
+
+  // ── Auction Event column with date-based sub-categories ──────────────────
+  const eventItems=sortByOrder(filtered.filter(p=>getAucType(p)==='event'));
+  const eventCollapsed=!!aucColCollapsed['event'];
+  const eventCol=document.createElement('div');eventCol.className='col';eventCol.style.width='320px';
+  eventCol.innerHTML=`
+    <div class="col-head auc-event" style="cursor:pointer;" onclick="toggleColCollapse('event')">
+      <span><i class="fas fa-calendar-alt" style="margin-right:6px;"></i>Auction Event</span>
+      <span style="display:flex;align-items:center;gap:6px;">
+        <span class="col-badge">${eventItems.length}</span>
+        <i class="fas fa-chevron-down auc-group-chevron ${eventCollapsed?'rotated':''}"></i>
+      </span>
+    </div>
+    <div id="ac-event" class="auc-event-group-body ${eventCollapsed?'hidden':''}"></div>`;
+  board.appendChild(eventCol);
+  const eventCont=eventCol.querySelector('#ac-event');
+
+  if(!eventCollapsed){
+    if(!eventItems.length){
+      eventCont.innerHTML=`<div class="empty-col"><i class="fas fa-inbox"></i>No auction events</div>`;
+    } else {
+      // Group by event category (matching venue + date), then ungrouped
+      const grouped={};  // catId -> [props]
+      const ungrouped=[];
+
+      eventItems.forEach(p=>{
+        const aucDate=getAucDate(p)||'';
+        const venue=(getAucVenue(p)||'').toLowerCase();
+        let matched=false;
+        aucEventCats.forEach(cat=>{
+          const nameMatch=cat.name.split(',').some(n=>venue.includes(n.trim().toLowerCase()));
+          // Both getAucDate and cat.date return yyyy-MM-dd (HTML date input format)
+          // Also support dd/MM/yyyy stored format by normalising
+          const normAucDate=aucDate.includes('/')?aucDate.split('/').reverse().join('-'):aucDate;
+          const dateMatch=!cat.date||normAucDate===cat.date;
+          if(nameMatch&&dateMatch){
+            if(!grouped[cat.id])grouped[cat.id]=[];
+            grouped[cat.id].push(p);
+            matched=true;
+          }
+        });
+        if(!matched)ungrouped.push(p);
+        // (sorting happens after grouping)
+      });
+
+      // Render each category group
+      aucEventCats.forEach(cat=>{
+        const catItems=sortByOrder(grouped[cat.id]||[]);
+        const catCollapsed=!!aucColCollapsed['cat_'+cat.id];
+        const dateLabel=cat.date?new Date(cat.date+'T00:00:00').toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'}):'Any date';
+        const grp=document.createElement('div');grp.className='auc-event-group';
+        grp.innerHTML=`
+          <div class="auc-event-group-head ${catCollapsed?'collapsed':''}" onclick="toggleColCollapse('cat_${cat.id}')">
+            <span>
+              <i class="fas fa-calendar-star" style="margin-right:5px;font-size:10px;"></i>
+              ${cat.name}
+              <span class="group-meta">${dateLabel}</span>
+            </span>
+            <span style="display:flex;align-items:center;gap:6px;">
+              <span class="col-badge" style="background:rgba(255,255,255,0.2);">${catItems.length}</span>
+              <i class="fas fa-chevron-down auc-group-chevron ${catCollapsed?'rotated':''}"></i>
+            </span>
+          </div>
+          <div id="grp-${cat.id}" class="auc-event-group-body ${catCollapsed?'hidden':''}"></div>`;
+        eventCont.appendChild(grp);
+        const grpBody=grp.querySelector(`#grp-${cat.id}`);
+        if(!catItems.length){grpBody.innerHTML=`<div class="empty-col" style="font-size:11px;padding:12px;"><i class="fas fa-inbox"></i> No properties yet</div>`;}
+        else catItems.forEach(p=>grpBody.appendChild(buildAucCard(p,{id:'event',label:'Auction Event',cls:'auc-event',badge:'badge-event'})));
+      });
+
+      // Ungrouped events
+      const sortedUngrouped=sortByOrder(ungrouped);
+      if(ungrouped.length||!aucEventCats.length){
+        const ungrpCollapsed=!!aucColCollapsed['cat_ungrouped'];
+        const grp=document.createElement('div');grp.className='auc-event-group';
+        grp.innerHTML=`
+          <div class="auc-event-group-head ${ungrpCollapsed?'collapsed':''}" onclick="toggleColCollapse('cat_ungrouped')">
+            <span><i class="fas fa-question-circle" style="margin-right:5px;font-size:10px;"></i>Unassigned Events</span>
+            <span style="display:flex;align-items:center;gap:6px;">
+              <span class="col-badge" style="background:rgba(255,255,255,0.2);">${ungrouped.length}</span>
+              <i class="fas fa-chevron-down auc-group-chevron ${ungrpCollapsed?'rotated':''}"></i>
+            </span>
+          </div>
+          <div id="grp-ungrouped" class="auc-event-group-body ${ungrpCollapsed?'hidden':''}"></div>`;
+        eventCont.appendChild(grp);
+        const grpBody=grp.querySelector('#grp-ungrouped');
+        if(!ungrouped.length){grpBody.innerHTML=`<div class="empty-col" style="font-size:11px;padding:12px;"><i class="fas fa-check-circle" style="color:var(--green);"></i> All events categorised</div>`;}
+        else sortedUngrouped.forEach(p=>grpBody.appendChild(buildAucCard(p,{id:'event',label:'Auction Event',cls:'auc-event',badge:'badge-event'})));
+      }
+    }
+  }
+
+  // ── Not Categorised column (collapsible) ─────────────────────────────────
+  const unsetItems=filtered.filter(p=>getAucType(p)==='unset');
+  const unsetCollapsed=!!aucColCollapsed['unset'];
+  const unsetCol=document.createElement('div');unsetCol.className='col';unsetCol.style.width='320px';
+  unsetCol.innerHTML=`
+    <div class="col-head auc-unset" style="cursor:pointer;" onclick="toggleColCollapse('unset')">
+      <span>Not Categorised</span>
+      <span style="display:flex;align-items:center;gap:6px;">
+        <span class="col-badge">${unsetItems.length}</span>
+        <i class="fas fa-chevron-down auc-group-chevron ${unsetCollapsed?'rotated':''}"></i>
+      </span>
+    </div>
+    <div id="ac-unset" class="auc-event-group-body ${unsetCollapsed?'hidden':''}"></div>`;
+  board.appendChild(unsetCol);
+  const unsetCont=unsetCol.querySelector('#ac-unset');
+  if(!unsetItems.length){unsetCont.innerHTML=`<div class="empty-col"><i class="fas fa-check-circle" style="color:var(--green);"></i> All categorised!</div>`;}
+  else unsetItems.forEach(p=>unsetCont.appendChild(buildAucCard(p,{id:'unset',label:'Not Categorised',cls:'auc-unset',badge:'badge-unset'})));
+}
+
+// ── COLLAPSE TOGGLE ──────────────────────────────────────────────────────────
+function toggleColCollapse(id){
+  aucColCollapsed[id]=!aucColCollapsed[id];
+  localStorage.setItem('aucColCollapsed',JSON.stringify(aucColCollapsed));pushState('aucColCollapsed',aucColCollapsed);
+  renderAuctions();
+}
+
+// ── EVENT CATEGORY MANAGEMENT ────────────────────────────────────────────────
+function toggleCatPanel(){
+  const panel=document.getElementById('eventCatPanel');
+  panel.classList.toggle('open');
+  if(panel.classList.contains('open'))renderCatList();
+}
+
+function renderCatList(){
+  const list=document.getElementById('catList');
+  if(!list)return;
+  if(!aucEventCats.length){list.innerHTML=`<div style="font-size:12px;color:var(--text-muted);padding:6px 0;">No categories yet — add one below.</div>`;return;}
+
+  // Count properties per category
+  const vaultAuctions=allProperties.filter(p=>(p.method||'').toLowerCase().includes('auction'));
+  const vaultIds=new Set(vaultAuctions.map(p=>String(p.propertyId)));
+  const allAucs=[...vaultAuctions,...aucSheetProps.filter(p=>!vaultIds.has(String(p.propertyId)))];
+
+  list.innerHTML=aucEventCats.map(cat=>{
+    const count=allAucs.filter(p=>{
+      const venue=(getAucVenue(p)||'').toLowerCase();
+      const d=getAucDate(p)||'';
+      const normD=d.includes('/')?d.split('/').reverse().join('-'):d;
+      const nameMatch=cat.name.split(',').some(n=>venue.includes(n.trim().toLowerCase()));
+      return nameMatch&&(!cat.date||normD===cat.date);
+    }).length;
+    const dateLabel=cat.date?new Date(cat.date+'T00:00:00').toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'}):'Any date';
+    return `<div class="cat-item">
+      <input class="cat-item-name" value="${cat.name}" 
+        style="flex:1;background:transparent;border:none;border-bottom:1px dashed var(--border2);color:var(--text-bright);font-size:13px;font-weight:500;outline:none;padding:2px 0;font-family:inherit;"
+        onchange="renameCat('${cat.id}',this.value)"
+        title="Click to rename">
+      <span class="cat-item-date"><i class="fas fa-calendar" style="margin-right:4px;font-size:10px;"></i>${dateLabel}</span>
+      <span class="cat-item-count">${count} properties</span>
+      <button class="cat-del-btn" onclick="deleteEventCategory('${cat.id}')"><i class="fas fa-trash"></i></button>
+    </div>`;
+  }).join('');
+}
+
+function addEventCategory(){
+  const name=document.getElementById('catName').value.trim();
+  const date=document.getElementById('catDate').value; // yyyy-MM-dd from date input
+  if(!name){toast('Please enter a venue name','error');return;}
+  const id='cat_'+Date.now();
+  aucEventCats.push({id,name,date:date||''});
+  localStorage.setItem('aucEventCats',JSON.stringify(aucEventCats));pushState('aucEventCats',aucEventCats);
+  document.getElementById('catName').value='';
+  document.getElementById('catDate').value='';
+  renderCatList();
+  renderAuctions();
+  // Debug: show what we stored vs what auctions have
+  const vA=allProperties.filter(p=>(p.method||'').toLowerCase().includes('auction'));
+  const sample=vA.slice(0,3).map(p=>p.address+'|date:'+getAucDate(p)+'|venue:'+getAucVenue(p));
+  console.log('[CAT] Added:',name,date,'Sample auction dates/venues:',sample);
+  toast(`Category "${name}" added — ${date?'matching '+date:'any date'}`,'success');
+}
+
+function deleteEventCategory(id){
+  aucEventCats=aucEventCats.filter(c=>c.id!==id);
+  localStorage.setItem('aucEventCats',JSON.stringify(aucEventCats));pushState('aucEventCats',aucEventCats);
+  renderCatList();
+  renderAuctions();
+}
+
+function renameCat(id,newName){
+  const cat=aucEventCats.find(c=>c.id===id);
+  if(cat){cat.name=newName.trim();localStorage.setItem('aucEventCats',JSON.stringify(aucEventCats));pushState('aucEventCats',aucEventCats);renderAuctions();}
+}
+
+function buildAucCard(p,col){
+  const key='auc_'+p.id;if(!aucChecks[key])aucChecks[key]={};const checks=aucChecks[key];
+  const done=AUC_CHECKLIST.filter(f=>checks[f]).length,pct=Math.round(done/AUC_CHECKLIST.length*100);
+  const pill=p.agents.slice(0,1).map(a=>`<span class="agent-pill"><i class="fas fa-user" style="font-size:9px;"></i>${a}</span>`).join('');
+  const aucDate=getAucDate(p);
+  const aucTime=getAucTime(p);
+  const venue=getAucVenue(p);
+  const orderOfSale=(aucMeta[key]||{}).orderOfSale||'';
+  const cardCollapsed=!!(aucMeta[key]||{}).cardCollapsed;
+
+  // Format auction date countdown
+  let dateDisplay='';
+  if(aucDate){
+    const ad=new Date(aucDate);const today=new Date();today.setHours(0,0,0,0);ad.setHours(0,0,0,0);
+    const diff=Math.ceil((ad-today)/86400000);
+    const label=diff<0?`${Math.abs(diff)}d ago`:diff===0?'Today!':diff===1?'Tomorrow':`${diff} days`;
+    const timeStr=aucTime?` <span style="font-size:11px;opacity:0.75;">@ ${aucTime}</span>`:'';
+    dateDisplay=`<div class="auc-datetime"><i class="fas fa-gavel"></i>${ad.toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'})}${timeStr} <span style="font-size:10px;opacity:0.6;">(${label})</span></div>`;
+  } else {
+    dateDisplay=`<div class="auc-datetime" style="color:var(--text-muted);font-weight:400;"><i class="fas fa-calendar-plus"></i> <span style="font-size:11px;">Set auction date…</span></div>`;
+  }
+
+  const card=document.createElement('div');card.className='auc-card';
+  card.innerHTML=`
+    <div class="auc-card-head">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="auc-order-badge" id="ord-badge-${p.id}" title="Order of Sale" onclick="event.stopPropagation()">
+          <input type="text" value="${orderOfSale}" placeholder="#"
+            style="width:32px;height:32px;text-align:center;font-size:14px;font-weight:700;
+                   background:var(--accent-softer);border:2px solid var(--accent);border-radius:8px;
+                   color:var(--accent);font-family:inherit;outline:none;cursor:text;"
+            onchange="setOrderOfSale('${p.id}',this.value);event.stopPropagation();"
+            onclick="event.stopPropagation();"
+            title="Enter order of sale number">
+        </div>
+        <div style="flex:1;cursor:pointer;" onclick="openAucModalById('${p.id}')">
+          <div class="auc-card-addr">${p.address}</div>
+          <div class="auc-card-meta">${pill}<span class="auc-status-badge ${col.badge}">${col.label}</span></div>
+          ${dateDisplay}
+          ${venue?`<div class="auc-venue"><i class="fas fa-map-marker-alt"></i>${venue}</div>`:''}
+        </div>
+        <button onclick="toggleCardCollapse('${p.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px;flex-shrink:0;" title="Collapse/expand">
+          <i class="fas fa-chevron-down auc-group-chevron ${cardCollapsed?'rotated':''}"></i>
+        </button>
+      </div>
+    </div>
+    <div id="card-body-${p.id}" class="${cardCollapsed?'hidden':''}">
+      <div class="auc-card-body">
+        <input type="date" class="venue-input" id="ad-${p.id}" value="${aucDate}" placeholder="Auction date"
+          style="margin-bottom:6px;" onchange="setAucDate('${p.id}',this.value);renderAuctions();">
+        ${col.id!=='unset'?`<div class="auc-venue"><i class="fas fa-map-marker-alt"></i><input type="text" class="venue-input" id="vn-${p.id}" value="${venue}" placeholder="${col.id==='onsite'?'Onsite address / location':'Event name / venue'}" onchange="setAucVenue('${p.id}',this.value)" onclick="event.stopPropagation()"></div>`:''}
+        <div class="auc-type-toggle" onclick="event.stopPropagation()">
+          <button class="type-btn${getAucType(p)==='onsite'?' active-onsite':''}" onclick="setAucTypeManual('${p.id}','onsite')"><i class="fas fa-map-marker-alt"></i> Onsite</button>
+          <button class="type-btn${getAucType(p)==='event'?' active-event':''}" onclick="setAucTypeManual('${p.id}','event')"><i class="fas fa-calendar-alt"></i> Event</button>
+        </div>
+      </div>
+      <div class="auc-card-foot" style="cursor:pointer;" onclick="openAucModalById('${p.id}')" title="Click to open checklist">
+        <span class="progress-label">${done}/${AUC_CHECKLIST.length}</span>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb-${p.id}" style="width:${pct}%"></div></div>
+        <span class="progress-label" style="color:var(--accent);font-size:10px;"><i class="fas fa-tasks" style="margin-right:3px;"></i>${pct}%</span>
+      </div>
+    </div>`;
+
+  // Checklist is now in the modal only — clicking the progress bar opens the modal
+  return card;
+}
+
+function toggleCardCollapse(propId){
+  const key='auc_'+propId;
+  if(!aucMeta[key])aucMeta[key]={};
+  aucMeta[key].cardCollapsed=!aucMeta[key].cardCollapsed;
+  localStorage.setItem('aucMeta',JSON.stringify(aucMeta));pushState('aucMeta',aucMeta);
+  const body=document.getElementById('card-body-'+propId);
+  const chevron=document.querySelector(`[onclick="toggleCardCollapse('${propId}')"] .auc-group-chevron`);
+  if(body){body.classList.toggle('hidden',!!aucMeta[key].cardCollapsed);}
+  if(chevron){chevron.classList.toggle('rotated',!!aucMeta[key].cardCollapsed);}
+}
+
+function setAucTypeManual(propId,type){
+  const key='auc_'+propId;
+  if(!aucMeta[key])aucMeta[key]={};
+  aucMeta[key].type=type;
+  aucMeta[key].manualType=true;
+  localStorage.setItem('aucMeta',JSON.stringify(aucMeta));pushState('aucMeta',aucMeta);
+  renderAuctions();
+}
+
+function setOrderOfSale(propId,val){
+  const key='auc_'+propId;
+  if(!aucMeta[key])aucMeta[key]={};
+  aucMeta[key].orderOfSale=val.trim();
+  localStorage.setItem('aucMeta',JSON.stringify(aucMeta));pushState('aucMeta',aucMeta);
+  // Re-sort the group this card is in
+  renderAuctions();
+}
+
+
+function updateAucStats(){
+  // Merge VaultRE feed auctions + standalone auction sheet props (deduped by propertyId)
+  const vaultAuctions=allProperties.filter(p=>(p.method||'').toLowerCase().includes('auction'));
+  const vaultIds=new Set(vaultAuctions.map(p=>String(p.propertyId)));
+  const sheetOnly=aucSheetProps.filter(p=>!vaultIds.has(String(p.propertyId)));
+  const auctions=[...vaultAuctions,...sheetOnly];
+  let total=0,fullyReady=0;
+  auctions.forEach(p=>{const checks=aucChecks['auc_'+p.id]||{};if(AUC_CHECKLIST.filter(f=>checks[f]).length===AUC_CHECKLIST.length)fullyReady++;total+=AUC_CHECKLIST.filter(f=>checks[f]).length;});
+  document.getElementById('as-ready').textContent=fullyReady;
+  document.getElementById('as-avg').textContent=auctions.length?Math.round(total/auctions.length)+'/'+AUC_CHECKLIST.length:'—';
+}
+function resetAucAutoAssign(){
+  // Build the full auction list (same as renderAuctions does)
+  const vA = allProperties.filter(p=>(p.method||'').toLowerCase().includes('auction'));
+  const vIds = new Set(vA.map(p=>String(p.propertyId)));
+  const allAuctions = [...vA, ...aucSheetProps.filter(p=>!vIds.has(String(p.propertyId)))];
+
+  let reassigned = 0, noVenue = 0;
+  allAuctions.forEach(p => {
+    const key = 'auc_' + p.id;
+    if (!aucMeta[key]) aucMeta[key] = {};
+    const meta = aucMeta[key];
+    meta.manualType = false;
+
+    // Get venue — prefer live aucMeta venue (set by applyLiveData), fall back to property
+    const venue = meta.venue || '';
+    if (venue) {
+      const t = classifyVenue(venue);
+      meta.type = t;
+      if (t !== 'unset') reassigned++;
+    } else {
+      meta.type = 'unset';
+      noVenue++;
+    }
+  });
+
+  localStorage.setItem('aucMeta', JSON.stringify(aucMeta));
+  renderAuctions();
+  toast(`Re-assigned: ${reassigned} from venue, ${noVenue} still need venue in VaultRE`, 'info');
+}
+
+function clearAucFilters(){['aSearch','aAgent','aTypeFilter'].forEach(id=>{const e=document.getElementById(id);e.tagName==='INPUT'?e.value='':e.value='';});renderAuctions();}
+
+// ── FORMS BOARD ──────────────────────────────────────────────────────────────
+function addFormRequest(){document.getElementById('addFormRow').style.display='flex';}
+function submitFormRequest(){
+  const addr=document.getElementById('newAddr').value.trim(),agent=document.getElementById('newAgent').value.trim(),type=document.getElementById('newType').value;
+  if(!addr){toast('Please enter a property address','error');return;}
+  const id='form_'+Date.now();
+  formRequests.push({id,address:addr,agent,type,created:new Date().toISOString()});
+  localStorage.setItem('formRequests',JSON.stringify(formRequests));pushState('formRequests',formRequests);
+  document.getElementById('newAddr').value='';document.getElementById('newAgent').value='';
+  document.getElementById('addFormRow').style.display='none';
+  toast('Form request added','success');renderForms();
+}
+function deleteFormRequest(id){formRequests=formRequests.filter(r=>r.id!==id);delete formChecks[id];localStorage.setItem('formRequests',JSON.stringify(formRequests));pushState('formRequests',formRequests);localStorage.setItem('formChecks',JSON.stringify(formChecks));pushState('formChecks',formChecks);renderForms();}
+function renderForms(){
+  const q=document.getElementById('fSearch').value.toLowerCase(),ft=document.getElementById('fFormType').value;
+  const filtered=formRequests.filter(r=>{if(ft&&r.type!==ft)return false;if(q&&!(r.address+' '+(r.agent||'')).toLowerCase().includes(q))return false;return true;});
+  const f6=filtered.filter(r=>r.type==='f6'),contracts=filtered.filter(r=>r.type==='contract');
+  const pending=formRequests.filter(r=>{const c=formChecks[r.id]||{},l=r.type==='f6'?F6_CHECKLIST:CONTRACT_CHECKLIST;return l.some(f=>!c[f]);}).length;
+  const complete=formRequests.filter(r=>{const c=formChecks[r.id]||{},l=r.type==='f6'?F6_CHECKLIST:CONTRACT_CHECKLIST;return l.every(f=>c[f]);}).length;
+  document.getElementById('fs-f6').textContent=formRequests.filter(r=>r.type==='f6').length;
+  document.getElementById('fs-contract').textContent=formRequests.filter(r=>r.type==='contract').length;
+  document.getElementById('fs-pending').textContent=pending;document.getElementById('fs-complete').textContent=complete;
+  document.getElementById('tc-forms').textContent=formRequests.length;document.getElementById('fCount').textContent=filtered.length+' requests';
+  document.getElementById('f6-badge').textContent=f6.length;document.getElementById('contract-badge').textContent=contracts.length;
+  const f6c=document.getElementById('f6Cards'),cc=document.getElementById('contractCards');
+  f6c.innerHTML='';cc.innerHTML='';
+  if(!f6.length)f6c.innerHTML=`<div class="empty-col"><i class="fas fa-inbox"></i>No Form 6 requests</div>`;
+  if(!contracts.length)cc.innerHTML=`<div class="empty-col"><i class="fas fa-inbox"></i>No contract requests</div>`;
+  f6.forEach(r=>f6c.appendChild(buildFormCard(r)));contracts.forEach(r=>cc.appendChild(buildFormCard(r)));
+}
+function buildFormCard(r){
+  const list=r.type==='f6'?F6_CHECKLIST:CONTRACT_CHECKLIST;
+  if(!formChecks[r.id])formChecks[r.id]={};const checks=formChecks[r.id];
+  const done=list.filter(f=>checks[f]).length,pct=Math.round(done/list.length*100);
+  const card=document.createElement('div');card.className='form-card';
+  const typeLabel=r.type==='f6'?'Form 6':'Contract',typeCls=r.type==='f6'?'badge-f6':'badge-contract';
+  card.innerHTML=`<div class="form-card-head"><div><div class="form-card-addr">${r.address}</div>${r.agent?`<div class="form-card-agent"><i class="fas fa-user" style="font-size:9px;"></i>${r.agent}</div>`:''}</div><span class="form-type-badge ${typeCls}">${typeLabel}</span></div><div class="form-card-body"><div class="form-checklist" id="fcl-${r.id}"></div></div><div class="form-card-foot"><span class="progress-label" style="font-size:11px;">${done}/${list.length} steps</span><div class="progress-bar-wrap"><div class="progress-bar-fill" id="fpb-${r.id}" style="width:${pct}%"></div></div><button class="btn-danger-sm" onclick="deleteFormRequest('${r.id}')"><i class="fas fa-trash"></i></button></div>`;
+  const clCont=card.querySelector(`#fcl-${r.id}`);
+  list.forEach(field=>{
+    const uid=`form_${r.id}_${field.replace(/\W/g,'_')}`,checked=!!checks[field];
+    const item=document.createElement('div');item.className='form-cl-item'+(checked?' checked':'');
+    item.innerHTML=`<input type="checkbox" id="${uid}" ${checked?'checked':''}><label for="${uid}">${field}</label>`;
+    item.querySelector('input').addEventListener('change',function(){
+      formChecks[r.id][field]=this.checked;localStorage.setItem('formChecks',JSON.stringify(formChecks));pushState('formChecks',formChecks);
+      item.className='form-cl-item'+(this.checked?' checked':'');
+      const d2=list.filter(f=>formChecks[r.id][f]).length,p2=Math.round(d2/list.length*100);
+      card.querySelector(`#fpb-${r.id}`).style.width=p2+'%';renderFormStats();
+    });
+    clCont.appendChild(item);
+  });
+  return card;
+}
+function renderFormStats(){
+  const pending=formRequests.filter(r=>{const c=formChecks[r.id]||{},l=r.type==='f6'?F6_CHECKLIST:CONTRACT_CHECKLIST;return l.some(f=>!c[f]);}).length;
+  const complete=formRequests.filter(r=>{const c=formChecks[r.id]||{},l=r.type==='f6'?F6_CHECKLIST:CONTRACT_CHECKLIST;return l.every(f=>c[f]);}).length;
+  document.getElementById('fs-pending').textContent=pending;document.getElementById('fs-complete').textContent=complete;
+}
+function clearFormFilters(){['fSearch','fFormType'].forEach(id=>{const e=document.getElementById(id);e.tagName==='INPUT'?e.value='':e.value='';});renderForms();}
+
+// ── MODAL ────────────────────────────────────────────────────────────────────
+function openListingModal(p){
+  document.getElementById('modalTitle').textContent=p.address;
+  document.getElementById('modalSub').textContent=[p.suburb,p.status].filter(Boolean).map(s=>s.charAt(0).toUpperCase()+s.slice(1).replace(/_/g,' ')).join(' · ');
+  const today=new Date();today.setHours(0,0,0,0);let urgency='';
+  if(p.settlementDate){const sd=new Date(p.settlementDate);sd.setHours(0,0,0,0);const diff=Math.ceil((sd-today)/86400000);const cls=diff<0?'overdue':diff===0?'today-u':diff<=7?'soon-u':'ok-u';const txt=diff<0?`Overdue by ${Math.abs(diff)} days`:diff===0?'Settling today!':diff<=7?`Settling in ${diff} days (${fmtDate(p.settlementDate)})`:`${diff} days until settlement (${fmtDate(p.settlementDate)})`;const icon=diff<0?'fa-exclamation-triangle':diff<=7?'fa-clock':'fa-calendar-check';urgency=`<div class="urgency-box ${cls}"><i class="fas ${icon}"></i>${txt}</div>`;}
+  const dashStatus=p.status?p.status.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()):'—';
+  const portalNote=p.publishedToWeb?`Published ${fmtDate(p.publishedToWeb)}`:'Not published to portals';
+  const vaultUrl=p.propertyId?`https://login.vaultre.com.au/cgi-bin/clientvault/property/saledetails.cgi?propertyid=${p.propertyId}`:'';
+  const fields=[['Dashboard Status',dashStatus],['VaultRE Status',p.vaultStatus?p.vaultStatus.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()):'—'],['Portal Published',portalNote],['Agents',p.agents.join(', ')||'—'],['Type',p.propertyType||'—'],['Method',p.method||'—'],['Beds/Bath/Gar',[p.bed,p.bath,p.garages].filter(Boolean).join(' / ')||'—'],['Display Price',p.displayPrice||'—'],['Sale Price',p.salePrice?'$'+Number(p.salePrice).toLocaleString():'—'],['Settlement',p.settlementDate?fmtDate(p.settlementDate):'—'],['Authority Start',p.authorityStart?fmtDate(p.authorityStart):'—'],['Authority End',p.authorityEnd?fmtDate(p.authorityEnd):'—'],['Property ID',p.propertyId||'—']];
+  const vaultLink=vaultUrl?`<a href="${vaultUrl}" target="_blank" class="set-link vault" style="margin-top:12px;display:inline-flex;"><i class="fas fa-external-link-alt"></i> Open in VaultRE</a>`:'';
+  document.getElementById('modalBody').innerHTML=`${urgency}<div class="modal-section-title">Property information</div><div class="modal-grid">${fields.map(([l,v])=>`<div class="detail-cell"><div class="d-label">${l}</div><div class="d-val">${v}</div></div>`).join('')}</div>${vaultLink}`;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+
+function openAucModalById(propId){
+  const vaultAuctions=allProperties.filter(p=>(p.method||'').toLowerCase().includes('auction'));
+  const vaultIds=new Set(vaultAuctions.map(p=>String(p.propertyId)));
+  const allAucs=[...vaultAuctions,...aucSheetProps.filter(p=>!vaultIds.has(String(p.propertyId)))];
+  const p=allAucs.find(a=>String(a.id)===String(propId)||String(a.propertyId)===String(propId));
+  if(!p){toast('Property not found','error');return;}
+  openAucModal(p);
+}
+
+function openAucModal(p){
+  const key='auc_'+p.id;
+  if(!aucChecks[key])aucChecks[key]={};
+  const meta=aucMeta[key]||{};
+  const aucDate=getAucDate(p);
+  const aucTime=getAucTime(p);
+  const venue=getAucVenue(p);
+  const vaultUrl=p.propertyId?`https://login.vaultre.com.au/cgi-bin/clientvault/property/saledetails.cgi?propertyid=${p.propertyId}`:'';
+
+  let dateDisplay='—';
+  if(aucDate){
+    const ad=new Date(aucDate);const today=new Date();today.setHours(0,0,0,0);ad.setHours(0,0,0,0);
+    const diff=Math.ceil((ad-today)/86400000);
+    const label=diff===0?'Today!':diff===1?'Tomorrow':diff>0?`in ${diff} days`:`${Math.abs(diff)} days ago`;
+    dateDisplay=ad.toLocaleDateString('en-AU',{weekday:'short',day:'2-digit',month:'short',year:'numeric'})+(aucTime?' @ '+aucTime:'')+` (${label})`;
+  }
+
+  // Info fields
+  const agents=Array.isArray(p.agents)?p.agents.join(', '):(p.agents||'—');
+  const fields=[
+    ['Agent(s)',          agents||'—'],
+    ['Auction Date',      dateDisplay],
+    ['Venue',             venue||'—'],
+    ['Method',            p.method||'Auction'],
+    ['Display Price',     p.displayPrice||'—'],
+    ['Type',              p.propertyType||'—'],
+    ['Property ID',       p.propertyId||'—'],
+    ['Order of Sale',     meta.orderOfSale||'—'],
+    ['Category',          getAucType(p)==='onsite'?'Onsite Auction':getAucType(p)==='event'?'Auction Event':'Not Categorised'],
+  ];
+
+  // Checklist progress
+  const done=AUC_CHECKLIST.filter(f=>aucChecks[key][f]).length;
+  const pct=Math.round(done/AUC_CHECKLIST.length*100);
+  const progressBar=`
+    <div style="margin-top:4px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:11px;font-weight:600;color:var(--text-muted);">Preparation checklist</span>
+        <span style="font-size:11px;font-weight:700;color:${pct===100?'var(--green)':'var(--accent)'};">${done}/${AUC_CHECKLIST.length} (${pct}%)</span>
+      </div>
+      <div style="height:6px;background:var(--border2);border-radius:6px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:${pct===100?'var(--green)':'var(--accent)'};border-radius:6px;transition:width 0.3s;"></div>
+      </div>
+    </div>`;
+
+  // Checklist grid (interactive)
+  const checklistHtml=`<div class="modal-section-title" style="margin-top:16px;">Preparation checklist</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;" id="modal-checklist-${p.id}">
+      ${AUC_CHECKLIST.map(field=>{
+        const uid=`modal_auc_${p.id}_${field.replace(/\W/g,'_')}`;
+        const checked=!!aucChecks[key][field];
+        return `<div class="form-cl-item ${checked?'checked':''}" style="background:var(--surface2);border-radius:7px;padding:6px 10px;">
+          <input type="checkbox" id="${uid}" ${checked?'checked':''}
+            onchange="toggleAucCheckFromModal('${p.id}','${field}',this.checked)">
+          <label for="${uid}" style="font-size:12px;">${field}</label>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  document.getElementById('modalTitle').textContent=p.address;
+  document.getElementById('modalSub').textContent='Auction Property';
+  const vaultLink=vaultUrl?`<a href="${vaultUrl}" target="_blank" class="set-link vault" style="margin-top:12px;display:inline-flex;"><i class="fas fa-external-link-alt"></i> Open in VaultRE</a>`:'';
+  document.getElementById('modalBody').innerHTML=`
+    ${progressBar}
+    <div class="modal-section-title" style="margin-top:16px;">Property information</div>
+    <div class="modal-grid">${fields.map(([l,v])=>`<div class="detail-cell"><div class="d-label">${l}</div><div class="d-val">${v}</div></div>`).join('')}</div>
+    ${vaultLink}
+    ${checklistHtml}`;
+  document.getElementById('modal').classList.add('open');
+}
+
+function toggleAucCheckFromModal(propId,field,checked){
+  const key='auc_'+propId;
+  if(!aucChecks[key])aucChecks[key]={};
+  aucChecks[key][field]=checked;
+  localStorage.setItem('aucChecks',JSON.stringify(aucChecks));pushState('aucChecks',aucChecks);
+  // Update styling on the modal item
+  const uid=`modal_auc_${propId}_${field.replace(/\W/g,'_')}`;
+  const item=document.getElementById(uid)?.closest('.form-cl-item');
+  if(item)item.className='form-cl-item '+(checked?'checked':'');
+  // Update progress bar in modal
+  const done=AUC_CHECKLIST.filter(f=>aucChecks[key][f]).length;
+  const pct=Math.round(done/AUC_CHECKLIST.length*100);
+  const pbEl=document.querySelector('#modal .urgency-box,#modalBody div[style*="width:"]');
+  // Refresh the inline progress bar
+  const bars=document.querySelectorAll('#modalBody div[style*="width:"][style*="height:100%"]');
+  bars.forEach(b=>b.style.width=pct+'%');
+  const labels=document.querySelectorAll('#modalBody span[style*="font-weight:700"][style*="color:"]');
+  labels.forEach(l=>l.textContent=`${done}/${AUC_CHECKLIST.length} (${pct}%)`);
+  updateAucStats();
+}
+function bgClose(e){if(e.target===document.getElementById('modal'))closeModal();}
+
+// ── AUTO REFRESH ──────────────────────────────────────────────────────────────
+function toggleAuto(){
+  if(autoInterval){clearInterval(autoInterval);autoInterval=null;document.getElementById('autoBtnLabel').textContent='Auto-refresh';document.getElementById('autoBtn').classList.remove('on');toast('Auto-refresh off','info');}
+  else{autoInterval=setInterval(()=>{if(lastFile)readFile(lastFile);},60000);document.getElementById('autoBtnLabel').textContent='Auto-refresh ON';document.getElementById('autoBtn').classList.add('on');toast('Auto-refresh every 60s','success');}
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function fmtDate(d){if(!d)return'—';const dt=d instanceof Date?d:new Date(d);if(isNaN(dt))return String(d);return dt.toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'});}
+function toast(msg,type='info'){const el=document.getElementById('toast');el.textContent=msg;el.className=`toast show ${type}`;clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),4500);}
+
+// ── SETTLEMENT DATA & RENDER ──────────────────────────────────────────────────
+
+// Seed data from the uploaded settlement file — will be overridden by VaultRE upload
+const SEED_SETTLEMENTS = [
+  {address:"14 Compton Court, Bentley Park QLD",settlementDate:"2026-05-28",propertyId:34782871,saleLifeId:39932995,driveFolderId:"1pbZ80-jS85wEYeELfOeAmAHgBsNCriBA",missingDocuments:["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"],foundDocuments:[],agent:"Nicole Bragg",salePrice:775000},
+  {address:"4/5-7 Nelson Street, Bungalow QLD",settlementDate:"2026-06-01",propertyId:24010319,saleLifeId:28016727,driveFolderId:"1c_JREb5PbH-YplGiO7f68HlCP39r5Ac3",missingDocuments:["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"],foundDocuments:[],agent:"Luke Bantoft",salePrice:305000},
+  {address:"1/21-23 Fairweather Street, Yorkeys Knob QLD",settlementDate:"2026-06-01",propertyId:19237109,saleLifeId:35948907,driveFolderId:"1aOmycmgVtVq2dCWjioAGMNDCVsbWSPfP",missingDocuments:["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"],foundDocuments:[],agent:"Alesha Wilson",salePrice:515000},
+  {address:"26 Bello Drive, Belvedere QLD",settlementDate:"2026-06-03",propertyId:34148262,saleLifeId:39288453,driveFolderId:"17ejigUeDwsoVmNTSSqTYdGin0brgdBBI",missingDocuments:["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"],foundDocuments:[],agent:"Ben Keene; Ray Murphy",salePrice:510000},
+  {address:"12 Laguna Avenue, Redlynch QLD",settlementDate:"2026-06-03",propertyId:34591552,saleLifeId:39773129,driveFolderId:"1S-MIK-jc_HLSv1n9zVVcVfwgtNVGLjNl",missingDocuments:["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"],foundDocuments:[],agent:"Brad Davidson",salePrice:955000},
+  {address:"3 Kendall Street, Mount Sheridan QLD",settlementDate:"2026-06-04",propertyId:34812030,saleLifeId:39963988,driveFolderId:"1IVYMHZbHgM6lcFNCfwQtHltIsccbNFJk",missingDocuments:["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"],foundDocuments:[],agent:"Nicole Bragg",salePrice:870000},
+  {address:"5-7 Coombak Close, Edmonton QLD",settlementDate:"2026-06-05",propertyId:34788026,saleLifeId:39938318,driveFolderId:"175aT-wEHTriNvJnfwqKj7oIXnFhIzbX_",missingDocuments:["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"],foundDocuments:[],agent:"Nicole Bragg",salePrice:1175000},
+  {address:"7/2 Mayers Street, Manunda QLD",settlementDate:"2026-06-05",propertyId:30938541,saleLifeId:39978126,driveFolderId:"1JOj-ad65ViVs_JAtVwNkN4kW5ErTwBem",missingDocuments:["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"],foundDocuments:[],agent:"Tarren Olufson",salePrice:325000},
+  {address:"8 Shay Street, Wangan QLD",settlementDate:"2026-06-09",propertyId:34786124,saleLifeId:39936227,driveFolderId:"1eOGmVbSWdKAjYo_xIwpN0VMnKjQ5CEut",missingDocuments:["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"],foundDocuments:[],agent:"Nicole Bragg",salePrice:418000},
+  {address:"17 Woodrose Drive, Mount Sheridan QLD",settlementDate:"2026-06-09",propertyId:35068263,saleLifeId:40236262,driveFolderId:"1KGZF9Gj6CXd6gyto8vZX2RGADQjmiqFA",missingDocuments:["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"],foundDocuments:[],agent:"Nicole Bragg",salePrice:1200000},
+  {address:"12 Barnes Street, Earlville QLD",settlementDate:"2026-06-09",propertyId:35065810,saleLifeId:40233781,driveFolderId:"1WsLV5exbDzPQyEdZEgjCuZzHFhd1yeIH",missingDocuments:["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"],foundDocuments:[],agent:"Nicole Bragg",salePrice:720000},
+  {address:"79 Sondrio Street, Woree QLD",settlementDate:"2026-06-10",propertyId:31378490,saleLifeId:36110880,driveFolderId:"1w9k-2noohkGU4cYXV15If5FkZNMzqfCl",missingDocuments:["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"],foundDocuments:[],agent:"Sheldon Powe-Hobbs",salePrice:530000},
+  {address:"815/2-10 Greenslopes Street, Cairns North QLD",settlementDate:"2026-06-11",propertyId:21925997,saleLifeId:39448704,driveFolderId:"1Rym_P6l44gT1s2LlLG8oFGor4M4sXMUT",missingDocuments:["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"],foundDocuments:[],agent:"Natasha Whalley-Thompson",salePrice:530000},
+  {address:"33 Ash Street, Yungaburra QLD",settlementDate:"2026-06-11",propertyId:35064897,saleLifeId:40232863,driveFolderId:"1nCfetSpuYW0MLK_MVQw-z-cpRKmdbMhJ",missingDocuments:["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"],foundDocuments:[],agent:"Nicole Bragg",salePrice:720000},
+  {address:"240/2 Keem Street, Trinity Beach QLD",settlementDate:"2026-06-12",propertyId:8730402,saleLifeId:40238466,driveFolderId:"1EHsDDLrIyKRzucsvKBDF-XqZy5RGrJYi",missingDocuments:["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"],foundDocuments:[],agent:"Simon Batt",salePrice:525000},
+  {address:"7/5-7 Oyster Court, Trinity Beach QLD",settlementDate:"2026-06-12",propertyId:8725312,saleLifeId:25740410,driveFolderId:"1RY-nW6t45K3gd5n0l1CSwmJu5VrsEFng",missingDocuments:["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"],foundDocuments:[],agent:"Rebecca Butson",salePrice:530000},
+  {address:"1 & 2/24 Manus Street, Trinity Beach QLD",settlementDate:"2026-06-15",propertyId:21923567,saleLifeId:31996604,driveFolderId:"1_YpAdoHdDuc3B-6YEw7NcdMfPJ8BPSjh",missingDocuments:["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"],foundDocuments:[],agent:"Rebecca Butson",salePrice:922000},
+];
+
+// Live settlements = seed data + unconditional properties from VaultRE feed with settlement dates
+// liveSettlements starts with seed data — overridden by live feed when available
+// Seed data is filtered to past-due/today; live feed provides all and board filters itself
+let liveSettlements = [...SEED_SETTLEMENTS];
+
+function buildSettlementsFromFeed(){
+  // Merge VaultRE unconditionals that have settlement dates into the list
+  // (avoid duplicating entries already in seed by propertyId)
+  const seedIds = new Set(SEED_SETTLEMENTS.map(s=>String(s.propertyId)));
+  const todayMs=new Date().setHours(0,0,0,0);
+  const feedSet = allProperties
+    .filter(p=>(p.status==='unconditional'||p.vaultStatus==='unconditional') && p.settlementDate)
+    .filter(p=>{
+      const sd=new Date(p.settlementDate);sd.setHours(0,0,0,0);
+      return sd<=todayMs; // only past-due or today
+    })
+    .filter(p=>!seedIds.has(String(p.propertyId)))
+    .map(p=>({
+      address:p.address, settlementDate:fmtDateISO(p.settlementDate),
+      propertyId:p.propertyId||p.id, saleLifeId:p.saleLifeId||'',
+      driveFolderId:'', missingDocuments:[], foundDocuments:[],
+      agent:p.agents.join('; '), salePrice:p.salePrice?Number(p.salePrice):null,
+    }));
+  liveSettlements=[...SEED_SETTLEMENTS,...feedSet];
+  populateSetAgents();
+  renderSettlements();
+  const n=liveSettlements.length;
+  document.getElementById('tc-settlements').textContent=n;
+}
+
+function fmtDateISO(d){if(!d)return'';const dt=d instanceof Date?d:new Date(d);if(isNaN(dt))return'';return dt.toISOString().slice(0,10);}
+
+function setUrgency(s){
+  const today=new Date();today.setHours(0,0,0,0);
+  const sd=new Date(s.settlementDate);sd.setHours(0,0,0,0);
+  const diff=Math.ceil((sd-today)/86400000);
+  if(diff<0)return{cls:'overdue',pill:'u-overdue',row:'row-overdue',days:diff,label:`Past due ${Math.abs(diff)}d`};
+  if(diff===0)return{cls:'today',pill:'u-today',row:'row-today',days:0,label:'Today!'};
+  if(diff<=7)return{cls:'soon',pill:'u-soon',row:'row-soon',days:diff,label:`${diff}d`};
+  return{cls:'ok',pill:'u-ok',row:'row-ok',days:diff,label:`${diff}d`};
+}
+
+const ALL_DOCS=["FCRE Settlement Authority Form","Settlement Letter (Buyers Solicitor)","Settlement Letter (Sellers Solicitor)","Commission Split Form","Seller's Tax Invoice","Vendor's Bank Details"];
+const DOC_SHORT={"FCRE Settlement Authority Form":"FCRE","Settlement Letter (Buyers Solicitor)":"Buyer Ltr","Settlement Letter (Sellers Solicitor)":"Seller Ltr","Commission Split Form":"Comm Split","Seller's Tax Invoice":"Tax Inv","Vendor's Bank Details":"Bank Det"};
+
+function populateSetAgents(){
+  const sel=document.getElementById('sAgent'),cur=sel.value;
+  while(sel.options.length>1)sel.remove(1);
+  const agents=[...new Set(liveSettlements.map(s=>s.agent).filter(Boolean))].sort();
+  agents.forEach(a=>sel.add(new Option(a,a)));
+  if(cur)sel.value=cur;
+}
+
+function renderSettlements(){
+  const q=document.getElementById('sSearch').value.toLowerCase();
+  const su=document.getElementById('sUrgency').value;
+  const sa=document.getElementById('sAgent').value;
+  const sd=document.getElementById('sMissingDocs').value;
+
+  const filtered=liveSettlements.filter(s=>{
+    const u=setUrgency(s);
+    // Board only shows past-due and today
+    if(u.cls!=='overdue'&&u.cls!=='today')return false;
+    // Then apply user filters
+    if(su&&u.cls!==su)return false;
+    if(q&&!(s.address+' '+(s.agent||'')).toLowerCase().includes(q))return false;
+    if(sa&&s.agent!==sa)return false;
+    if(sd==='missing'&&s.missingDocuments.length===0)return false;
+    if(sd==='complete'&&s.missingDocuments.length>0)return false;
+    return true;
+  });
+
+  // Stats (always from full list)
+  const s_od=liveSettlements.filter(s=>setUrgency(s).cls==='overdue').length;
+  const s_td=liveSettlements.filter(s=>setUrgency(s).cls==='today').length;
+  const s_md=liveSettlements.filter(s=>s.missingDocuments.length>0).length;
+  document.getElementById('ss-overdue').textContent=s_od;
+  document.getElementById('ss-today').textContent=s_td;
+  document.getElementById('ss-total').textContent=liveSettlements.length;
+  document.getElementById('ss-missingdocs').textContent=s_md;
+  document.getElementById('tc-settlements').textContent=liveSettlements.length;
+  document.getElementById('sCount').textContent=filtered.length+' properties';
+
+  // Alert banner
+  const alert=document.getElementById('setAlert'),alertMsg=document.getElementById('setAlertMsg');
+  if(s_od>0||s_td>0){
+    alert.classList.add('show');
+    let msg=[];
+    if(s_od>0)msg.push(`${s_od} past due`);
+    if(s_td>0)msg.push(`${s_td} settling today`);
+    alertMsg.textContent=msg.join(' · ')+' — action required';
+  } else {alert.classList.remove('show');}
+
+  // Missing docs summary
+  const docCounts={};
+  ALL_DOCS.forEach(d=>docCounts[d]=0);
+  liveSettlements.forEach(s=>s.missingDocuments.forEach(d=>{if(d in docCounts)docCounts[d]++;}));
+  const totalMissing=Object.values(docCounts).reduce((a,b)=>a+b,0);
+  const missSec=document.getElementById('setMissingSection');
+  const missGrid=document.getElementById('setMissingGrid');
+  if(totalMissing>0){
+    missSec.style.display='block';
+    missGrid.innerHTML=ALL_DOCS.filter(d=>docCounts[d]>0).map(d=>`
+      <div class="set-missing-card">
+        <div class="mc-count">${docCounts[d]}</div>
+        <div class="mc-label">${d}</div>
+      </div>`).join('');
+  } else {missSec.style.display='none';}
+
+  // Table
+  const tbody=document.getElementById('setTableBody');
+  const empty=document.getElementById('setEmpty');
+  tbody.innerHTML='';
+  if(!liveSettlements.length){empty.style.display='block';return;}
+  empty.style.display='none';
+  if(!filtered.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);">No settlements match the current filters.</td></tr>`;return;}
+
+  // Sort: overdue first, then today, then soonest
+  const sorted=[...filtered].sort((a,b)=>new Date(a.settlementDate)-new Date(b.settlementDate));
+
+  sorted.forEach(s=>{
+    const u=setUrgency(s);
+    const tr=document.createElement('tr');
+    tr.className=u.row;
+
+    // Doc chips
+    const chips=ALL_DOCS.map(d=>{
+      const missing=s.missingDocuments.includes(d);
+      return `<span class="doc-chip ${missing?'doc-missing':'doc-ok'}" title="${d}">${missing?'✗':'✓'} ${DOC_SHORT[d]}</span>`;
+    }).join('');
+
+    // Links
+    const vaultUrl=s.propertyId?`https://login.vaultre.com.au/cgi-bin/clientvault/property/saledetails.cgi?propertyid=${s.propertyId}`:'#';
+    const driveUrl=s.driveFolderId?`https://drive.google.com/drive/folders/${s.driveFolderId}`:'';
+    const linksHtml=`
+      <a href="${vaultUrl}" class="set-link vault" target="_blank"><i class="fas fa-external-link-alt"></i> VaultRE</a>
+      ${driveUrl?`<a href="${driveUrl}" class="set-link drive" target="_blank"><i class="fab fa-google-drive"></i> Drive</a>`:''}`;
+
+    const priceStr=s.salePrice?'$'+Number(s.salePrice).toLocaleString('en-AU'):'—';
+    const agents=s.agent||'—';
+    const daysDisplay=u.days===0?'Today':u.days<0?`-${Math.abs(u.days)}`:`+${u.days}`;
+
+    tr.innerHTML=`
+      <td>
+        <div class="set-addr">${s.address}</div>
+        <div class="set-agent"><i class="fas fa-user" style="font-size:9px;"></i>${agents}</div>
+        ${s.propertyId?`<div class="set-pid">PID: ${s.propertyId}</div>`:''}
+      </td>
+      <td><div class="set-date">${s.settlementDate}</div></td>
+      <td><div class="set-days ${u.cls}">${daysDisplay}</div></td>
+      <td><span class="urgency-pill ${u.pill}">${u.label}</span></td>
+      <td><div class="set-price">${priceStr}</div></td>
+      <td><div class="doc-chips">${chips}</div></td>
+      <td>${linksHtml}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function clearSetFilters(){['sSearch','sUrgency','sAgent','sMissingDocs'].forEach(id=>{const e=document.getElementById(id);e.tagName==='INPUT'?e.value='':e.value='';});renderSettlements();}
+
+// ── VENUE KEYWORD CONFIG ─────────────────────────────────────────────────────
+const DEFAULT_ONSITE_KW  = ['on-site','onsite','on site','at the property'];
+const DEFAULT_EVENT_KW   = ['bluewater','lighthouse','tavern','rooms','in rooms','auction room','event'];
+
+let venueKwOnsite = JSON.parse(localStorage.getItem('venueKwOnsite')||JSON.stringify(DEFAULT_ONSITE_KW));
+let venueKwEvent  = JSON.parse(localStorage.getItem('venueKwEvent') ||JSON.stringify(DEFAULT_EVENT_KW));
+
+function saveVenueKw(){
+  localStorage.setItem('venueKwOnsite',JSON.stringify(venueKwOnsite));
+  localStorage.setItem('venueKwEvent', JSON.stringify(venueKwEvent));
+}
+
+function renderKeywordChips(){
+  const onsiteEl=document.getElementById('kwOnsite');
+  const eventEl=document.getElementById('kwEvent');
+  if(!onsiteEl||!eventEl)return;
+  onsiteEl.innerHTML=venueKwOnsite.map((k,i)=>`<span class="keyword-chip kw-onsite">${k}<button class="kw-del" onclick="removeKeyword('onsite',${i})"><i class="fas fa-times"></i></button></span>`).join('');
+  eventEl.innerHTML=venueKwEvent.map((k,i)=>`<span class="keyword-chip kw-event">${k}<button class="kw-del" onclick="removeKeyword('event',${i})"><i class="fas fa-times"></i></button></span>`).join('');
+}
+
+function addKeyword(type){
+  const input=document.getElementById(type==='onsite'?'kwOnsiteInput':'kwEventInput');
+  const val=input.value.trim().toLowerCase();
+  if(!val)return;
+  if(type==='onsite'&&!venueKwOnsite.includes(val))venueKwOnsite.push(val);
+  if(type==='event' &&!venueKwEvent.includes(val)) venueKwEvent.push(val);
+  input.value='';
+  saveVenueKw();
+  renderKeywordChips();
+}
+
+function removeKeyword(type,idx){
+  if(type==='onsite')venueKwOnsite.splice(idx,1);
+  else               venueKwEvent.splice(idx,1);
+  saveVenueKw();
+  renderKeywordChips();
+}
+
+function toggleVenueConfig(){
+  const panel=document.getElementById('venueConfigPanel');
+  panel.classList.toggle('open');
+  renderKeywordChips();
+}
+
+// ── AUTO-ASSIGN VENUE TYPE ───────────────────────────────────────────────────
+function classifyVenue(venue){
+  if(!venue)return'unset';
+  const v=venue.toLowerCase();
+  if(venueKwOnsite.some(k=>v.includes(k)))return'onsite';
+  if(venueKwEvent.some(k=>v.includes(k))) return'event';
+  // If venue has any non-empty text that isn't matched, treat as event
+  // (a blank venue stays unset; any venue text we don't recognise is still an event)
+  if(v.trim())return'event';
+  return'unset';
+}
+
+// ── AUCTION SHEET UPLOAD ─────────────────────────────────────────────────────
+// Standalone — works with or without a VaultRE feed loaded.
+// Reads the Auction Tracker sheet exported from Google Sheets and
+// populates the board directly from the sheet data.
+// Columns: Property Address | Agent | Auction Date | Auction Time | Venue |
+//          Method of Sale | Display Price | Last Checked | Notes Log |
+//          Property ID | Sale Life ID
+function handleAuctionSheetUpload(e){
+  const f=e.target.files[0];if(!f)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'array',cellDates:true});
+      const sheetName=wb.SheetNames.includes('Auction Tracker')?'Auction Tracker':wb.SheetNames[0];
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{defval:''});
+      if(!rows.length){toast('No data found in auction sheet','error');return;}
+
+      let assigned=0, skipped=0;
+
+      rows.forEach(r=>{
+        const propId  = String(r['Property ID']||r['property_id']||r['PropertyID']||'').trim();
+        const saleLifeId = String(r['Sale Life ID']||r['sale_life_id']||'').trim();
+        const address = String(r['Property Address']||r['Address']||'').trim();
+        const agent   = String(r['Agent']||'').trim();
+        const venue   = String(r['Venue']||r['venue']||'').trim();
+        const method  = String(r['Method of Sale']||'').trim();
+        const price   = String(r['Display Price']||'').trim();
+        const aucDate = r['Auction Date']||r['auction_date']||'';
+        const aucTime = r['Auction Time']||r['auction_time']||'';
+
+        if(!propId&&!address){skipped++;return;}
+
+        // Use property ID as the canonical key
+        // Also try to match against the already-loaded VaultRE feed
+        const vaultProp = allProperties.find(p=>
+          (propId && String(p.propertyId)===propId) ||
+          (saleLifeId && String(p.saleLifeId)===saleLifeId)
+        );
+        const key = 'auc_' + (vaultProp ? vaultProp.id : propId || address);
+
+        // Build a synthetic property entry for the board if not in VaultRE feed
+        if(!vaultProp && propId){
+          // Check if this property is already in our synthetic list
+          const alreadySynthetic = aucSheetProps.find(p=>p.id===propId);
+          if(!alreadySynthetic){
+            aucSheetProps.push({
+              id: propId,
+              propertyId: propId,
+              saleLifeId: saleLifeId,
+              address: address,
+              agents: agent ? agent.split(/[;&]/).map(a=>a.trim()).filter(Boolean) : [],
+              method: method||'Auction',
+              displayPrice: price,
+              status: 'listing',
+              vaultStatus: 'listing',
+              propertyType:'', bed:'', bath:'', garages:'',
+              settlementDate: null, suburb:'', salePrice:'',
+              portalStatus:'', authorityStart:'', authorityEnd:'',
+              modified:'', publishedToWeb: 'yes',
+            });
+          }
+        }
+
+        // Parse date
+        let dateStr='';
+        if(aucDate instanceof Date){
+          dateStr=aucDate.toISOString().slice(0,10);
+        } else if(aucDate){
+          const s=String(aucDate).trim();
+          const parts=s.split(/[\/\-]/);
+          if(parts.length===3&&s.includes('/')){
+            // dd/MM/yyyy from GAS
+            dateStr=parts[2]+'-'+parts[1].padStart(2,'0')+'-'+parts[0].padStart(2,'0');
+          } else {
+            const d=new Date(s);
+            if(!isNaN(d))dateStr=d.toISOString().slice(0,10);
+          }
+        }
+
+        if(!aucMeta[key])aucMeta[key]={};
+        aucMeta[key].type    = classifyVenue(venue);
+        aucMeta[key].venue   = venue;
+        aucMeta[key].propId  = propId;  // store so renderAuctions can cross-ref
+        if(dateStr)  aucMeta[key].auctionDate = dateStr;
+        if(aucTime)  aucMeta[key].auctionTime  = String(aucTime);
+        if(agent)    aucMeta[key].agent         = agent;
+        if(price)    aucMeta[key].price         = price;
+        if(address)  aucMeta[key].address       = address;
+        assigned++;
+      });
+
+      localStorage.setItem('aucMeta',JSON.stringify(aucMeta));pushState('aucMeta',aucMeta);
+      localStorage.setItem('aucSheetProps',JSON.stringify(aucSheetProps));
+
+      const tag=document.getElementById('aucSheetTag');
+      const tagText=document.getElementById('aucSheetTagText');
+      if(tag&&tagText){tag.style.display='flex';tagText.textContent=`Auction sheet loaded — ${assigned} properties`;}
+
+      toast(`Auction sheet: ${assigned} loaded, ${skipped} skipped`,'success');
+      renderAuctions();
+    }catch(err){toast('Failed to read auction sheet: '+err.message,'error');console.error(err);}
+  };
+  reader.readAsArrayBuffer(f);
+  e.target.value='';
+}
+
+// ── LIVE JSON FEED ───────────────────────────────────────────────────────────
+let liveStatus = {url: '', lastAttempt: null, lastSuccess: null, lastError: null, recordCount: null};
+
+function showDebug() {
+  const s = liveStatus;
+  const urlSet = !!LIVE_JSON_URL;
+  const lines = [
+    '<b style="color:var(--accent)">LIVE_JSON_URL</b>',
+    urlSet
+      ? '<span style="color:var(--green)">✓ Set: ' + LIVE_JSON_URL.substring(0,60) + '...</span>'
+      : '<span style="color:var(--red)">✗ NOT SET — paste your Web App URL into dashboard.html</span>',
+    '',
+    '<b style="color:var(--accent)">Last fetch attempt</b>',
+    s.lastAttempt ? s.lastAttempt : '<span style="color:var(--text-muted)">Never</span>',
+    '',
+    '<b style="color:var(--accent)">Last successful fetch</b>',
+    s.lastSuccess ? s.lastSuccess : '<span style="color:var(--text-muted)">Never</span>',
+    '',
+    '<b style="color:var(--accent)">Last error</b>',
+    s.lastError ? '<span style="color:var(--red)">' + s.lastError + '</span>' : '<span style="color:var(--green)">None</span>',
+    '',
+    '<b style="color:var(--accent)">Data loaded</b>',
+    s.recordCount !== null
+      ? '<span style="color:var(--green)">' + s.recordCount + ' properties</span>'
+      : '<span style="color:var(--text-muted)">No data yet</span>',
+    '',
+    '<b style="color:var(--accent)">allProperties in memory</b>',
+    '<span style="color:var(--text)">' + allProperties.length + ' listings</span>',
+    '',
+    '<b style="color:var(--accent)">How to fix if URL not set</b>',
+    '1. In Apps Script: Deploy → New deployment → Web App',
+    '2. Execute as: Me, Access: Anyone → Deploy',
+    '3. Copy the /exec URL',
+    '4. Open dashboard.html in a text editor',
+    '5. Find: const LIVE_JSON_URL = \'\'',
+    '6. Paste URL between the quotes → save',
+  ];
+  document.getElementById('debugContent').innerHTML = lines.join('<br>');
+  document.getElementById('debugModal').style.display = 'flex';
+}
+
+function retryLive() {
+  document.getElementById('debugModal').style.display = 'none';
+  fetchLiveData();
+  setTimeout(showDebug, 3000);
+}
+
+async function fetchLiveData() {
+  liveStatus.lastAttempt = new Date().toLocaleTimeString('en-AU');
+
+  if (!LIVE_JSON_URL) {
+    liveStatus.lastError = 'LIVE_JSON_URL is empty — paste your Web App URL into the dashboard';
+    console.warn(liveStatus.lastError);
+    return;
+  }
+
+  try {
+    const url = LIVE_JSON_URL + (LIVE_JSON_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
+    console.log('Fetching live data from:', url);
+    const resp = await fetch(url);
+    if (!resp.ok) {
+      liveStatus.lastError = 'HTTP ' + resp.status + ' — ' + resp.statusText;
+      console.warn('Live feed error:', liveStatus.lastError);
+      return;
+    }
+    const data = await resp.json();
+    if (!data || !data.lastUpdated) {
+      liveStatus.lastError = 'Response missing lastUpdated — got: ' + JSON.stringify(data).substring(0,100);
+      console.warn('Live feed bad format:', liveStatus.lastError);
+      return;
+    }
+    liveStatus.lastError = null;
+    liveStatus.lastSuccess = new Date().toLocaleTimeString('en-AU');
+    liveStatus.recordCount = (data.listings||[]).length + (data.auctions||[]).length;
+    console.log('Live data received:', liveStatus.recordCount, 'records, updated:', data.lastUpdated);
+    applyLiveData(data);
+  } catch(err) {
+    liveStatus.lastError = err.message || String(err);
+    console.warn('Live feed fetch error:', liveStatus.lastError);
+  }
+}
+
+function applyLiveData(data) {
+  const t = new Date(data.lastUpdated);
+  const timeStr = t.toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit'});
+
+  // ── Listings ────────────────────────────────────────────────────────────────
+  if (data.listings && data.listings.length) {
+    // Normalise from live format to dashboard format
+    allProperties = data.listings.map(p => {
+      const publishedToWeb = p.publishedToWeb || '';
+      const vaultStatus = (p.status || '').toLowerCase().trim().replace(/\s+/g, '_');
+      const contractStages = ['conditional','unconditional','under_contract','settled'];
+      const isPreLaunch = !publishedToWeb && !contractStages.includes(vaultStatus);
+      const status = isPreLaunch ? 'pre_launch' : vaultStatus;
+      return {
+        id:             String(p.propertyId || p.id),
+        propertyId:     String(p.propertyId || p.id),
+        saleLifeId:     String(p.saleLifeId || ''),
+        address:        p.address || '',
+        suburb:         p.suburb  || '',
+        status,
+        vaultStatus,
+        propertyType:   p.propertyType || '',
+        bed:            p.bed || '', bath: p.bath || '', garages: p.garages || '',
+        method:         p.method || '',
+        displayPrice:   p.displayPrice || '',
+        salePrice:      p.salePrice || '',
+        settlementDate: p.settlementDate ? parseDate(p.settlementDate) : null,
+        agents:         Array.isArray(p.agents) ? p.agents : [],
+        publishedToWeb,
+        portalStatus:   p.portalStatus || '',
+        modified:       p.modified || '',
+        authorityStart: '', authorityEnd: '',
+      };
+    }).filter(p => p.status !== 'settled');
+    populateAgentFilters();
+    renderListings();
+    document.getElementById('listingEmpty').style.display = 'none';
+  }
+
+  // ── Auctions ────────────────────────────────────────────────────────────────
+  if (data.auctions && data.auctions.length) {
+    // Merge auction date/time/venue into aucMeta, and build aucSheetProps
+    // for any property not already in allProperties
+    const vaultIds = new Set(allProperties.map(p => String(p.propertyId)));
+    aucSheetProps = [];
+
+    data.auctions.forEach(a => {
+      const propId = String(a.propertyId || a.id);
+      const key = 'auc_' + propId;
+
+      if (!aucMeta[key]) aucMeta[key] = {};
+
+      // Always update date/time/venue from live feed
+      if (a.auctionDate) aucMeta[key].auctionDate = parseAucDate(a.auctionDate);
+      if (a.auctionTime) aucMeta[key].auctionTime  = a.auctionTime;
+
+      // Always update venue and re-classify — venue data may have just been set in VaultRE
+      // manualType only blocks re-classification if user explicitly overrode AFTER a venue was set
+      const newVenue = a.venue || '';
+      const oldVenue = aucMeta[key].venue || '';
+      aucMeta[key].venue = newVenue;
+
+      const classified = classifyVenue(newVenue);
+      console.log('[AUC]', a.address, '| venue:', newVenue || '(blank)', '| classified:', classified);
+
+      if (!aucMeta[key].manualType || newVenue !== oldVenue || aucMeta[key].type === 'unset') {
+        if (classified !== 'unset') {
+          aucMeta[key].type = classified;
+          aucMeta[key].manualType = false;
+        } else {
+          aucMeta[key].type = 'unset';
+        }
+      }
+
+      // Build synthetic prop if not in VaultRE listing feed
+      if (!vaultIds.has(propId)) {
+        aucSheetProps.push({
+          id: propId, propertyId: propId, saleLifeId: a.saleLifeId || '',
+          address: a.address, agents: a.agents || [],
+          method: a.method || 'Auction', displayPrice: a.displayPrice || '',
+          status: 'listing', vaultStatus: 'listing', propertyType: '',
+          bed: '', bath: '', garages: '', settlementDate: null,
+          suburb: '', salePrice: '', portalStatus: '',
+          authorityStart: '', authorityEnd: '', modified: '', publishedToWeb: 'yes',
+        });
+      }
+    });
+
+    localStorage.setItem('aucMeta', JSON.stringify(aucMeta));
+    renderAuctions();
+  }
+
+  // ── Settlements ─────────────────────────────────────────────────────────────
+  if (data.settlements && data.settlements.length) {
+    // Live feed provides ALL settlements from the sheet (no date filter applied upstream)
+    // Merge with seed data — live feed takes priority by propertyId
+    const liveIds = new Set(data.settlements.map(s => String(s.propertyId)));
+    // Keep seed entries that aren't in the live feed (fallback for pre-existing data)
+    const seedOnly = SEED_SETTLEMENTS.filter(s => !liveIds.has(String(s.propertyId)));
+    liveSettlements = [
+      ...seedOnly,
+      ...data.settlements.map(s => ({
+        address:          s.address,
+        settlementDate:   s.settlementDate,
+        propertyId:       s.propertyId,
+        saleLifeId:       s.saleLifeId || '',
+        driveFolderId:    s.driveFolderId || '',
+        missingDocuments: s.missingDocuments || [],
+        foundDocuments:   s.foundDocuments   || [],
+        agent:            s.agent || '',
+        salePrice:        s.salePrice || null,
+      })),
+    ];
+    // liveSettlements now contains ALL — the board renders only past-due/today
+    populateSetAgents();
+    renderSettlements();
+  } else {
+    // No live feed yet — fall back to seed data only
+    liveSettlements = (()=>{
+      const t=new Date();t.setHours(0,0,0,0);
+      return SEED_SETTLEMENTS.filter(s=>{const d=new Date(s.settlementDate);d.setHours(0,0,0,0);return d<=t;});
+    })();
+    populateSetAgents();
+    renderSettlements();
+  }
+
+  // Update header timestamp
+  const tag = document.getElementById('updatedTag');
+  tag.style.display = 'inline-flex';
+  tag.textContent = 'Live · ' + timeStr;
+
+  // Update tab counts
+  document.getElementById('tc-listings').textContent = allProperties.length;
+}
+
+function parseAucDate(str) {
+  // Convert dd/MM/yyyy → yyyy-MM-dd
+  if (!str) return '';
+  const parts = String(str).trim().split('/');
+  if (parts.length === 3) return parts[2] + '-' + parts[1].padStart(2,'0') + '-' + parts[0].padStart(2,'0');
+  return str;
+}
+
+function startLiveRefresh() {
+  if (!LIVE_JSON_URL) return;
+  const liveTag = document.getElementById('liveTag');
+  if (liveTag) liveTag.style.display = 'inline-flex';
+  // Hide manual upload button when live — it's optional
+  const uploadLabel = document.getElementById('uploadBtnLabel');
+  if (uploadLabel) uploadLabel.textContent = 'Manual Upload';
+  fetchLiveData(); // fetch immediately on load
+  // Then refresh every 15 minutes
+  if (liveRefreshInterval) clearInterval(liveRefreshInterval);
+  liveRefreshInterval = setInterval(fetchLiveData, 15 * 60 * 1000);
+  toast('Live sync active — refreshes every 15 minutes', 'success');
+}
+
+// ── SYNC API ─────────────────────────────────────────────────────────────────
+const SYNC_KEYS = ['aucMeta','aucChecks','aucEventCats','aucColCollapsed','formRequests','formChecks','preLaunch'];
+
+async function syncApiCall(method, path, body) {
+  if (!SYNC_API_URL || !syncToken) return null;
+  try {
+    const resp = await fetch(SYNC_API_URL + path, {
+      method,
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + syncToken },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (resp.status === 401) { handleLogout(); return null; }
+    return await resp.json();
+  } catch(e) {
+    console.warn('Sync API error:', e.message);
+    return null;
+  }
+}
+
+async function doLogin() {
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  errEl.style.display = 'none';
+  if (!username || !password) { errEl.textContent = 'Please enter username and password'; errEl.style.display = 'block'; return; }
+  try {
+    const resp = await fetch(SYNC_API_URL + '/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) { errEl.textContent = data.error || 'Invalid credentials'; errEl.style.display = 'block'; return; }
+    syncToken = data.token;
+    syncUser  = data.username;
+    localStorage.setItem('syncToken', syncToken);
+    localStorage.setItem('syncUser',  syncUser);
+    document.getElementById('loginModal').style.display = 'none';
+    toast('Signed in as ' + syncUser, 'success');
+    await loadStateFromServer();
+    renderAll(); renderForms(); buildSettlementsFromFeed();
+  } catch(e) {
+    errEl.textContent = 'Could not connect to sync server';
+    errEl.style.display = 'block';
+  }
+}
+
+function skipLogin() {
+  document.getElementById('loginModal').style.display = 'none';
+  toast('Running offline — changes will not sync', 'info');
+}
+
+function handleLogout() {
+  syncToken = ''; syncUser = '';
+  localStorage.removeItem('syncToken');
+  localStorage.removeItem('syncUser');
+  showLoginModal();
+}
+
+function showLoginModal() {
+  if (!SYNC_API_URL) return; // no sync configured — skip login
+  document.getElementById('loginModal').style.display = 'flex';
+}
+
+// Load all state from server in one snapshot call
+async function loadStateFromServer() {
+  const snap = await syncApiCall('GET', '/snapshot');
+  if (!snap) return;
+  if (snap.aucMeta?.value)       { aucMeta        = snap.aucMeta.value;       localStorage.setItem('aucMeta',        JSON.stringify(aucMeta)); }
+  if (snap.aucChecks?.value)     { aucChecks       = snap.aucChecks.value;     localStorage.setItem('aucChecks',      JSON.stringify(aucChecks)); }
+  if (snap.aucEventCats?.value)  { aucEventCats    = snap.aucEventCats.value;  localStorage.setItem('aucEventCats',   JSON.stringify(aucEventCats)); }
+  if (snap.formRequests?.value)  { formRequests    = snap.formRequests.value;  localStorage.setItem('formRequests',   JSON.stringify(formRequests)); }
+  if (snap.formChecks?.value)    { formChecks      = snap.formChecks.value;    localStorage.setItem('formChecks',     JSON.stringify(formChecks)); }
+  if (snap.preLaunch?.value)     { preLaunch       = snap.preLaunch.value;     localStorage.setItem('preLaunch',      JSON.stringify(preLaunch)); }
+  if (snap.aucColCollapsed?.value){ aucColCollapsed = snap.aucColCollapsed.value; localStorage.setItem('aucColCollapsed', JSON.stringify(aucColCollapsed)); }
+  console.log('State loaded from server:', Object.keys(snap).join(', '));
+}
+
+// Push a single state key to the server
+async function pushState(key, value) {
+  if (!SYNC_API_URL || !syncToken) return;
+  syncApiCall('PUT', '/state/' + key, { value });
+}
+
+// Poll server every 30s to pick up changes made by other users
+let syncPollInterval = null;
+function startSyncPoll() {
+  if (!SYNC_API_URL || !syncToken) return;
+  if (syncPollInterval) clearInterval(syncPollInterval);
+  syncPollInterval = setInterval(async () => {
+    const snap = await syncApiCall('GET', '/snapshot');
+    if (!snap) return;
+    let changed = false;
+    if (snap.aucMeta?.value)       { aucMeta       = snap.aucMeta.value;      changed = true; }
+    if (snap.aucChecks?.value)     { aucChecks     = snap.aucChecks.value;    changed = true; }
+    if (snap.aucEventCats?.value)  { aucEventCats  = snap.aucEventCats.value; changed = true; }
+    if (snap.formRequests?.value)  { formRequests  = snap.formRequests.value; changed = true; }
+    if (snap.formChecks?.value)    { formChecks    = snap.formChecks.value;   changed = true; }
+    if (snap.preLaunch?.value)     { preLaunch     = snap.preLaunch.value;    changed = true; }
+    if (changed) { renderAuctions(); renderForms(); renderListings(); }
+  }, 30000);
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  if(!allProperties.length&&!preLaunch.length) document.getElementById('listingEmpty').style.display='block';
+  renderForms();
+  document.getElementById('tc-forms').textContent=formRequests.length;
+  buildSettlementsFromFeed();
+  renderKeywordChips();
+  startLiveRefresh();
+
+  // ── Sync API init ─────────────────────────────────────────────────────────
+  if (SYNC_API_URL) {
+    if (syncToken) {
+      // Verify existing token then load state
+      fetch(SYNC_API_URL + '/auth/verify', { headers: { 'Authorization': 'Bearer ' + syncToken } })
+        .then(r => {
+          if (r.ok) {
+            loadStateFromServer().then(() => {
+              renderAll(); renderForms(); buildSettlementsFromFeed();
+              startSyncPoll();
+            });
+          } else {
+            handleLogout(); // Token expired — show login
+          }
+        })
+        .catch(() => showLoginModal());
+    } else {
+      showLoginModal();
+    }
+  }
+});
+</script>
+</body>
+</html>
