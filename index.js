@@ -30,14 +30,26 @@ const PORT       = process.env.PORT || 3000;
 const DATABASE_URL = process.env.DATABASE_URL;
 const JWT_SECRET   = process.env.JWT_SECRET || 'rw-dashboard-secret-change-me';
 
-// Users — add/remove here or via env var DASHBOARD_USERS (JSON)
-// Format: [{"username":"jayden","password":"yourpassword"},{"username":"kayla","password":"pass2"}]
+// Users — configured via DASHBOARD_USERS env var in Railway
+// Just set the value to the JSON array — the code handles it safely
 const DEFAULT_USERS = [
   { username: 'admin', password: 'rwcairns2026' },
 ];
-const USERS = process.env.DASHBOARD_USERS
-  ? JSON.parse(process.env.DASHBOARD_USERS)
-  : DEFAULT_USERS;
+
+function parseUsers() {
+  const raw = process.env.DASHBOARD_USERS;
+  if (!raw) return DEFAULT_USERS;
+  try {
+    // Strip any accidental KEY=value prefix Railway might inject
+    const cleaned = raw.includes('=[') ? raw.slice(raw.indexOf('[')) : raw;
+    return JSON.parse(cleaned);
+  } catch(e) {
+    console.error('DASHBOARD_USERS parse error — using defaults. Raw value:', raw.substring(0, 100));
+    return DEFAULT_USERS;
+  }
+}
+const USERS = parseUsers();
+console.log('Loaded users:', USERS.map(u => u.username).join(', '));
 
 // ── DATABASE ──────────────────────────────────────────────────────────────────
 const pool = new Pool({
