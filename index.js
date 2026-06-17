@@ -12,11 +12,18 @@ const jwt      = require('jsonwebtoken');
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
-app.use(cors({
-  origin: '*', // Lock down to your Railway domain after first deploy
-  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization'],
-}));
+// Allow requests from file:// (local HTML), Railway domain, and any origin
+// file:// sends origin: null — we must explicitly allow it
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  // Allow null (file://), any https origin, or no origin (same-origin)
+  res.header('Access-Control-Allow-Origin', origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const PORT       = process.env.PORT || 3000;
@@ -161,13 +168,30 @@ app.delete('/state/:key', authMiddleware, async (req, res) => {
   }
 });
 
+// ── SERVE DASHBOARD HTML ─────────────────────────────────────────────────────
+// Place RW_Dashboard_v2.html in the same folder as index.js
+// Then access via https://vaultresync-production.up.railway.app/
+const path = require('path');
+const fs   = require('fs');
+app.get('/', (req, res) => {
+  const htmlPath = path.join(__dirname, 'RW_Dashboard_v2.html');
+  if (fs.existsSync(htmlPath)) {
+    res.sendFile(htmlPath);
+  } else {
+    res.json({ ok: true, message: 'Dashboard API running. Add RW_Dashboard_v2.html to serve dashboard.' });
+  }
+});
+
 // ── HEALTH ────────────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => res.json({ ok: true, time: new Date().toISOString() }));
 
 // ── START ─────────────────────────────────────────────────────────────────────
-initDb().then(() => {
-  app.listen(PORT, () => console.log(`Dashboard API running on port ${PORT}`));
-}).catch(err => {
-  console.error('Failed to init DB:', err);
-  process.exit(1);
+// Listen immediately so Railway healthcheck passes, then init DB
+app.listen(PORT, () => {
+  console.log(`Dashboard API running on port ${PORT}`);
+  console.log(`DATABASE_URL set: ${!!DATABASE_URL}`);
+  // Init DB after server is up
+  initDb().catch(err => {
+    console.error('DB init failed (will retry on next request):', err.message);
+  });
 });
